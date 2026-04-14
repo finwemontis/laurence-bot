@@ -1,0 +1,48 @@
+{
+  "sessionId": "session_001",
+  "meta": {
+    "createdAt": "2026-04-14T15:25:03.735Z",
+    "updatedAt": "2026-04-14T15:29:55.845Z",
+    "version": 7
+  },
+  "lock": {
+    "lockedUntil": null,
+    "reason": null
+  },
+  "relationship": {
+    "trust": 3,
+    "familiarity": 1,
+    "annoyance": 3,
+    "offense": 3,
+    "boundaryPressure": 5
+  },
+  "condition": {
+    "fatigue": 20,
+    "busyness": 50,
+    "irritability": 40,
+    "hunger": 30,
+    "health": 85
+  },
+  "schedule": {
+    "mode": "working",
+    "sleepDisturbCount": 0,
+    "lastSleepDisturbAt": null
+  },
+  "conversation": {
+    "turnCount": 6,
+    "currentTopic": "ludwig_relationship",
+    "sensitiveTopicCount": 2,
+    "lastUserMessageAt": "2026-04-14T15:29:53.745Z",
+    "lastAssistantMessageAt": "2026-04-14T15:29:55.845Z"
+  },
+  "privacy": {
+    "privacyStrikes": 3,
+    "lastSensitiveTopic": "ludwig_relationship",
+    "refusalCount": 1
+  },
+  "derived": {
+    "mood": "guarded",
+    "availability": "limited",
+    "toneBias": "cool"
+  }
+}

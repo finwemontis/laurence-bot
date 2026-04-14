@@ -1,0 +1,15 @@
+{
+  "sessionId": "session_001",
+  "messages": [
+    {
+      "role": "user",
+      "content": "??",
+      "ts": "2026-04-12T08:00:00Z"
+    },
+    {
+      "role": "assistant",
+      "content": "???",
+      "ts": "2026-04-12T08:00:01Z"
+    }
+  ]
+}
