@@ -87,9 +87,9 @@ export function createDefaultSessionState(sessionId = "session_001", now = new D
       refusalCount: 0
     },
     derived: {
-      mood: "controlled",
+      mood: "calm",
       availability: "limited",
-      toneBias: "cool"
+      toneBias: "neutral"
     }
   };
 }

@@ -14,6 +14,11 @@ function logSessionState(label, payload) {
   console.log(JSON.stringify(payload, null, 2));
 }
 
+function logPromptMessages(messages) {
+  console.log("[prompt-debug] messages");
+  console.log(JSON.stringify(messages, null, 2));
+}
+
 router.post("/chat", async (req, res) => {
   try {
     const { message, history = [] } = req.body;
@@ -84,6 +89,7 @@ router.post("/chat", async (req, res) => {
       sessionState
     });
 
+    logPromptMessages(messages);
     const reply = await generateChatReply(messages);
     const timestamp = new Date();
     let nextSessionState = applyAssistantReplyToSessionState(sessionState, reply, timestamp);
