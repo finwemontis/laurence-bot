@@ -2,7 +2,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs/promises";
 import { randomUUID } from "crypto";
-import { applySessionDecay, getLockedReply } from "./sessionGuard.js";
+import { applySessionDecay, finalizeSessionState, getLockedReply } from "./sessionGuard.js";
 import { formatUtc8Timestamp, getUtc8Parts } from "../utils/time.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -220,7 +220,10 @@ export async function saveSessionState(state, now = new Date()) {
 }
 
 export async function readActiveSessionState(sessionId, now = new Date()) {
-  return applySessionDecay(await readSessionState(sessionId), now);
+  return finalizeSessionState( 
+    applySessionDecay(await readSessionState(sessionId), now),
+    now
+  )
 }
 
 export async function updateSessionState(sessionId, updater, now = new Date()) {

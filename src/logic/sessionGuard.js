@@ -1,5 +1,8 @@
+// import作息时间表
 import { applyScheduleToSessionState } from "./scheduleGuard.js";
+// import时间工具
 import { formatUtc8Timestamp } from "../utils/time.js";
+// import关键词模式配置
 import {
   BASE_OFFENSE_PATTERNS,
   DEEP_PRIVATE_KEYWORDS,
@@ -11,17 +14,26 @@ import {
   VULNERABLE_PATTERNS
 } from "../config/sessionKeywords.js";
 
-const TIME_ZONE = "America/Los_Angeles";
+// 1. 一些常量
+const TIME_ZONE = "Asia/Shanghai";
+// 哎这常量有点奇怪啊
 const RELATIONSHIP_TOPIC = "ludwig_relationship";
+
+// 数值
+// 与用户关系state值上限
 const RELATIONSHIP_MAX = 10;
+// laurence自身状态state值上限
 const CONDITION_MAX = 100;
 const RELATIONSHIP_BASE_IRRITABILITY = 10;
 
+// 合并基础冒犯模式和冒犯关键词 统一生成 冒犯检测规则
 const OFFENSE_PATTERNS = [
   ...BASE_OFFENSE_PATTERNS,
   ...OFFENSIVE_KEYWORDS.map((keyword) => new RegExp(keyword, "i"))
 ];
 
+// 2. 一些工具函数
+// 2.1 防数值越界剪裁函数
 function clamp(value, min = 0, max = 100) {
   return Math.min(max, Math.max(min, Number(value) || 0));
 }
@@ -34,10 +46,14 @@ function clampCondition(value) {
   return clamp(value, 0, CONDITION_MAX);
 }
 
+
+// 2.2 消息文本处理
+// 判断文本中有无任何关键词
 function includesAnyKeyword(text, keywords) {
   return keywords.some((keyword) => text.includes(keyword));
 }
 
+// 标准化文本 去空格标点转小写并截短 会写在state日志和session state保存文件中
 function normalizeMessageText(text) {
   return text
     .trim()
@@ -46,11 +62,14 @@ function normalizeMessageText(text) {
     .slice(0, 40);
 }
 
+// 判断是不是特别短的单个短语
 function isShortSinglePhrase(text) {
   const normalized = normalizeMessageText(text);
   return normalized.length > 0 && normalized.length <= 4;
 }
 
+
+// 2.3 对用户消息进行隐私分级 应该移到private guard里面  ??????
 function getPrivacyLevel(text) {
   if (includesAnyKeyword(text, INTRUSIVE_KEYWORDS)) {
     return "intrusive";
@@ -67,7 +86,10 @@ function getPrivacyLevel(text) {
   return null;
 }
 
+
+// 3. 解析时间为当地时间 这应该移到utils/time.js里吧 应该吗 判断是否深夜 判断睡眠打搅是否清零
 function getLocalParts(date) {
+  // 总之这个应该移走吧  ????
   const formatter = new Intl.DateTimeFormat("en-CA", {
     timeZone: TIME_ZONE,
     year: "numeric",
@@ -88,6 +110,8 @@ function getLocalParts(date) {
   };
 }
 
+
+// 4. 判定当前消息的topic类型 算是话题分类器 这应该写成switch吧起码 ????
 function detectTopic(message, previousTopic = null) {
   const text = message.trim();
 
@@ -99,29 +123,38 @@ function detectTopic(message, previousTopic = null) {
     return "fiona";
   }
 
-  if (/logarius|洛加留斯/i.test(text)) {
+  if (/logarius|julian|洛加留斯|朱利安/i.test(text)) {
     return "logarius";
   }
 
-  if (/brador|布拉多尔/i.test(text)) {
+  if (/brador|布拉多/i.test(text)) {
     return "brador";
   }
 
-  if (/church|教会/i.test(text)) {
+  if (/church|教会|教堂|猎人|工坊/i.test(text)) {
     return "church";
   }
 
-  if (/吃饭|睡觉|休息|日常|daily/i.test(text)) {
+  if (/hunter|猎人|工坊|血月/i.test(text)) {
+    return "the_hunt";
+  }
+
+  if (/吃饭|睡觉|休息|散步|遛狗|日常|daily/i.test(text)) {
     return "daily_life";
   }
 
   return previousTopic;
 }
 
+
+// 5. state系列函数
+// 5.1 深拷贝当前state 避免原地修改
 function cloneSessionState(sessionState) {
   return JSON.parse(JSON.stringify(sessionState));
 }
 
+
+// 5.2 根据relationship里的annoyance offense更新condition里的irritability
 function syncIrritabilityFromRelationship(state) {
   state.condition.irritability = clampCondition(
     RELATIONSHIP_BASE_IRRITABILITY + state.relationship.annoyance * 5 + state.relationship.offense * 5
@@ -130,6 +163,8 @@ function syncIrritabilityFromRelationship(state) {
   return state;
 }
 
+
+// 5.3 通用评分函数 计算当前condition与某个目标情绪模板的接近程度 
 function scoreMoodTarget(condition, target, weights) {
   return Object.entries(target).reduce((score, [key, value]) => {
     const weight = weights[key] ?? 0;
@@ -138,14 +173,22 @@ function scoreMoodTarget(condition, target, weights) {
   }, 100);
 }
 
+
+// 6.1 谜の数值计算装置  
+// 从state推导出情绪标签 
+// 首先根据condition得出基础mood分数 然后根据relationship修正分数 处理特殊阈值 最后选分数高的mood作为当前情绪
 function resolveMood(state) {
+  // 拿取state里的对象
   const condition = state.condition || {};
   const relationship = state.relationship || {};
 
+  // health过低 直接return
   if ((condition.health ?? 0) <= 18) {
     return "unwell";
   }
 
+  // 情绪基础数值 首先根据condition得出基础mood分数
+  // 小数是权重
   const scores = {
     happy: scoreMoodTarget(
       condition,
@@ -189,6 +232,7 @@ function resolveMood(state) {
     )
   };
 
+  // 然后根据relationship修正分数
   scores.happy += relationship.trust * 5 + relationship.familiarity * 3;
   scores.happy -= relationship.annoyance * 5 + relationship.offense * 6 + relationship.boundaryPressure * 5;
 
@@ -216,6 +260,7 @@ function resolveMood(state) {
   scores.unwell += Math.max(0, (condition.fatigue ?? 0) - 60) * 0.35;
   scores.unwell -= relationship.trust * 0.5;
 
+  // 处理特殊阈值
   if (relationship.trust < 8 || relationship.familiarity < 6 || relationship.annoyance > 0) {
     scores.happy -= 16;
   }
@@ -242,6 +287,7 @@ function resolveMood(state) {
     scores.happy -= 12;
   }
 
+  // 防止happy太容易出现 或者说只有特别理想的状态才容易变成happy
   if (
     (condition.health ?? 0) >= 85 &&
     (condition.fatigue ?? 0) <= 30 &&
@@ -267,10 +313,15 @@ function resolveMood(state) {
     scores.happy += 18;
   }
 
+  // 把所有mood的最终分数排个序 选分最高的那个mood名字返回
   return Object.entries(scores).sort((a, b) => b[1] - a[1])[0][0];
 }
 
+
+// 6.2 谜の数值计算装置 2.0 
+// 推导语调倾向 
 function resolveToneBias(state, mood, availability) {
+  // 拿取对象
   const relationship = state.relationship || {};
   const condition = state.condition || {};
   const conversation = state.conversation || {};
@@ -408,6 +459,8 @@ function resolveToneBias(state, mood, availability) {
   return Object.entries(scores).sort((a, b) => b[1] - a[1])[0][0];
 }
 
+
+// 6.3 集中生成派生状态: derived的mood availability toneBias
 function buildDerived(state) {
   const { lock, derived } = state;
   const mood = resolveMood(state);
@@ -426,12 +479,17 @@ function buildDerived(state) {
   };
 }
 
+
+// 7. state收尾 
 function finalizeSessionState(sessionState, now = new Date()) {
   const state = applyScheduleToSessionState(syncIrritabilityFromRelationship(cloneSessionState(sessionState)), now);
   state.derived = buildDerived(state);
   return state;
 }
 
+
+// 8. state更新函数系列
+// 8.1 时间流逝的数值自然衰减 这函数应该放这吗 ????
 export function applySessionDecay(sessionState, now = new Date()) {
   let state = cloneSessionState(sessionState);
   const previous = new Date(state.meta.updatedAt || state.meta.createdAt || formatUtc8Timestamp(now));
@@ -472,11 +530,16 @@ export function applySessionDecay(sessionState, now = new Date()) {
     }
   }
 
-  return finalizeSessionState(state, now);
+  return state;
 }
 
+
+// 8.2 根据用户message决定state
 export function applyUserMessageToSessionState(sessionState, message, now = new Date()) {
-  let state = applySessionDecay(sessionState, now);
+  // 8.2.1 本轮message的判定 
+  // 应用时间衰减
+  let state = cloneSessionState(sessionState);
+  // 分析当前message类型和上下文特征
   const text = message.trim();
   const normalizedText = normalizeMessageText(text);
   const previousTopic = state.conversation.currentTopic;
@@ -494,15 +557,18 @@ export function applyUserMessageToSessionState(sessionState, message, now = new 
     normalizedText === state.conversation.lastUserMessageText;
   const restRequest = state.derived.availability === "rest";
 
+  // 8.2.2 上下文倍增器 连续重复追问的惩罚加倍
   const repeatedPrivacyContext = Boolean(privacyLevel || relationshipProbe) && state.conversation.sensitiveTopicCount >= 2;
   const repeatedOffenseContext = offensive && state.conversation.offensiveCount >= 2;
   const privacyMultiplier = repeatedPrivacyContext ? 2 : 1;
   const offenseMultiplier = repeatedOffenseContext ? 2 : 1;
 
+  // 8.2.3 基础对话state更新 
   state.conversation.turnCount += 1;
   state.conversation.lastUserMessageAt = formatUtc8Timestamp(now);
   state.conversation.currentTopic = nextTopic;
 
+  // 8.2.4 休息打搅规则 如果是rest 判定消息为打搅 格外罚分并累计睡眠打搅次数
   if (restRequest) {
     state.schedule.lastSleepDisturbAt = formatUtc8Timestamp(now);
 
@@ -516,6 +582,7 @@ export function applyUserMessageToSessionState(sessionState, message, now = new 
     state.schedule.sleepDisturbCount += 1;
   }
 
+  // 8.2.5 用户重复发短消息罚分规则 增加计数
   if (repeatedShortMessage) {
     state.conversation.repeatedMessageCount += 1;
     state.relationship.annoyance = clampRelationship(
@@ -525,12 +592,14 @@ export function applyUserMessageToSessionState(sessionState, message, now = new 
     state.conversation.repeatedMessageCount = 0;
   }
 
+  // 8.2.6 用户冒犯规则
   if (offensive) {
     state.conversation.offensiveCount += 1;
     state.relationship.offense = clampRelationship(state.relationship.offense + 2 * offenseMultiplier);
     state.relationship.annoyance = clampRelationship(state.relationship.annoyance + 1 * offenseMultiplier);
   }
 
+  // 8.2.7 敏感话题和隐私规则
   if (privacyLevel || relationshipProbe) {
     state.conversation.sensitiveTopicCount += 1;
     state.privacy.lastSensitiveTopic = privacyLevel || RELATIONSHIP_TOPIC;
@@ -587,11 +656,13 @@ export function applyUserMessageToSessionState(sessionState, message, now = new 
     );
   }
 
+  // 8.2.8 深夜规则 额外增加疲惫和不耐烦
   if (lateNight) {
     state.condition.fatigue = clampCondition(state.condition.fatigue + 10);
     state.relationship.annoyance = clampRelationship(state.relationship.annoyance + 2);
   }
 
+  // 8.2.9 用户表现脆弱友好 给予轻微正向关系修正
   if (vulnerable && !privacyLevel && !relationshipProbe) {
     state.relationship.trust = clampRelationship(state.relationship.trust + 2);
     state.relationship.annoyance = clampRelationship(state.relationship.annoyance - 1);
@@ -602,23 +673,32 @@ export function applyUserMessageToSessionState(sessionState, message, now = new 
     state.relationship.annoyance = clampRelationship(state.relationship.annoyance - 1);
   }
 
+  // 8.2.10 长时间聊天奖励 连续正常对话会缓慢提升熟悉度和信任度  ??? 待修
+  const NORMAL_CHAT_TRUST_CAP = 8;  // 普通对话trust上限是8
+  const INTEREST_TOPIC_TRUST_CAP = 10;  // laurence感兴趣的话题trust上限是10
   const qualifiesAsNormalChat = !offensive && !privacyLevel && !relationshipProbe && !lateNight;
-  if (qualifiesAsNormalChat && state.conversation.turnCount % 4 === 0) {
+  if (qualifiesAsNormalChat && state.conversation.turnCount % 5 === 0) {
     state.relationship.familiarity = clampRelationship(state.relationship.familiarity + 1);
-    state.relationship.trust = clampRelationship(state.relationship.trust + 1);
+    if (state.relationship.trust < NORMAL_CHAT_TRUST_CAP) {
+      state.relationship.trust = clampRelationship(state.relationship.trust + 1);
+    }
   }
 
+  // 8.2.11 如果对话从关系敏感话题切走 适当降低边界压力
   if (previousTopic === RELATIONSHIP_TOPIC && nextTopic && nextTopic !== RELATIONSHIP_TOPIC) {
     state.relationship.boundaryPressure = clampRelationship(state.relationship.boundaryPressure - 2);
   }
 
+  // 记录本轮用户消息文本并对更新后的state做最终整理
   state.conversation.lastUserMessageText = normalizedText || null;
 
   return finalizeSessionState(state, now);
 }
 
+
+// 9. Laurence回复后更新会话状态 主要记录回复时间和拒绝次数
 export function applyAssistantReplyToSessionState(sessionState, reply, now = new Date()) {
-  let state = applySessionDecay(sessionState, now);
+  let state = cloneSessionState(sessionState);
   state.conversation.lastAssistantMessageAt = formatUtc8Timestamp(now);
 
   if (/不能|不会|拒绝|不谈/i.test(reply)) {
@@ -628,11 +708,14 @@ export function applyAssistantReplyToSessionState(sessionState, reply, now = new
   return finalizeSessionState(state, now);
 }
 
+
+// 10. 将state翻译成prompt 控制本回合语气 态度 边界
 export function buildSessionStatePrompt(state) {
-  const snapshot = applySessionDecay(state, new Date());
+  const snapshot = finalizeSessionState(state, new Date());
   const { derived, relationship, condition, conversation, privacy } = snapshot;
 
   const moodMap = {
+    // ???? 增加依赖
     happy: "心情很好，愿意给一点真实温度",
     warm: "态度偏温和，能给出克制的亲近感",
     calm: "状态平稳，语气自然克制",
@@ -652,6 +735,7 @@ export function buildSessionStatePrompt(state) {
   };
 
   const toneMap = {
+    // 增加亲密 ????
     excited: "语气可以带一点压住的愉快，但不要外放过头",
     warm: "语气温一点，但仍要稳，不要像热情接待",
     neutral: "语气自然、简洁、平稳",
@@ -718,6 +802,7 @@ export function buildSessionStatePrompt(state) {
 }
 
 
+// 11. 如果当前会话仍处于锁定时间内则返回固定锁定回复 否则返回 null
 export function getLockedReply(sessionState, now = new Date()) {
   const lockedUntil = sessionState?.lock?.lockedUntil;
   if (!lockedUntil || new Date(lockedUntil).getTime() <= now.getTime()) {

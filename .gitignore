@@ -2,4 +2,7 @@ node_modules/
 .env
 npm-debug.log
 data/sessions/
+data/exports/
+data/state/
+data/conversations/
 
