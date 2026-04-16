@@ -3,9 +3,9 @@ import { buildPrompt } from "../services/promptBuilder.js";
 import { generateChatReply } from "../services/llmService.js";
 import { getBaseLore } from "../services/loreService.js";
 import { createMessage, ensureMessageTimestamps } from "../services/historyService.js";
-import { getActiveLockMessage, handleDebugCommand } from "../logic/commandHandler.js";
-import { applyAssistantReplyToSessionState, applySessionDecay, applyUserMessageToSessionState } from "../logic/sessionGuard.js";
-import { readSessionState, saveSessionState, snapshotSessionState } from "../logic/stateService.js";
+import { handleDebugCommand } from "../logic/commandHandler.js";
+import { applyAssistantReplyToSessionState, applyUserMessageToSessionState, getLockedReply } from "../logic/sessionGuard.js";
+import { ensureSessionId, readActiveSessionState, saveSessionState, snapshotSessionState } from "../logic/stateService.js";
 
 const router = express.Router();
 
@@ -21,7 +21,8 @@ function logPromptMessages(messages) {
 
 router.post("/chat", async (req, res) => {
   try {
-    const { message, history = [] } = req.body;
+    const { message, history = [], sessionId } = req.body;
+    const resolvedSessionId = ensureSessionId(sessionId);
 
     if (!message || typeof message !== "string") {
       return res.status(400).json({
@@ -38,11 +39,12 @@ router.post("/chat", async (req, res) => {
     }
 
     const normalizedHistory = ensureMessageTimestamps(history);
-    const debugResult = await handleDebugCommand(message, normalizedHistory);
+    const debugResult = await handleDebugCommand(message, normalizedHistory, resolvedSessionId);
 
     if (debugResult?.handled) {
       if (debugResult.meta?.state) {
         logSessionState("debug-command", {
+          sessionId: debugResult.sessionId,
           command: debugResult.meta.command,
           message,
           sessionState: debugResult.meta.state
@@ -51,25 +53,28 @@ router.post("/chat", async (req, res) => {
 
       return res.json({
         ok: true,
+        sessionId: debugResult.sessionId || resolvedSessionId,
         reply: debugResult.reply,
         history: debugResult.history,
         meta: debugResult.meta || null
       });
     }
 
-    let sessionState = applySessionDecay(await readSessionState());
-    const lockMessage = await getActiveLockMessage();
+    let sessionState = await readActiveSessionState(resolvedSessionId);
+    const lockMessage = getLockedReply(sessionState);
 
     if (lockMessage) {
       const lockedSnapshot = snapshotSessionState(sessionState);
       await saveSessionState(sessionState);
       logSessionState("locked-response", {
+        sessionId: sessionState.sessionId,
         message,
         sessionState: lockedSnapshot
       });
 
       return res.json({
         ok: true,
+        sessionId: sessionState.sessionId,
         reply: lockMessage,
         history: normalizedHistory,
         meta: {
@@ -97,6 +102,7 @@ router.post("/chat", async (req, res) => {
     const sessionStateSnapshot = snapshotSessionState(nextSessionState);
 
     logSessionState("chat-response", {
+      sessionId: nextSessionState.sessionId,
       message,
       reply,
       sessionState: sessionStateSnapshot
@@ -110,6 +116,7 @@ router.post("/chat", async (req, res) => {
 
     return res.json({
       ok: true,
+      sessionId: nextSessionState.sessionId,
       reply,
       history: newHistory,
       meta: {

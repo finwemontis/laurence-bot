@@ -1,5 +1,5 @@
 export const scheduleConfig = {
-  timezone: "America/Los_Angeles",
+  timezone: "Asia/Shanghai",
   weeklySchedule: {
     mondayToSaturday: {
       days: ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday"],

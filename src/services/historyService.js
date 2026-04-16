@@ -1,23 +1,20 @@
 import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs/promises";
+import { formatUtc8Timestamp, getUtc8Parts } from "../utils/time.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const exportsDir = path.resolve(__dirname, "../../data/exports");
 
-function toIsoString(value) {
-  return value instanceof Date ? value.toISOString() : new Date(value).toISOString();
-}
-
-function pad(value) {
-  return String(value).padStart(2, "0");
+function toTimestampString(value) {
+  return formatUtc8Timestamp(value);
 }
 
 export function ensureMessageTimestamps(history = []) {
   return history.map((item) => ({
     ...item,
-    ts: item.ts || new Date().toISOString()
+    ts: item.ts || formatUtc8Timestamp()
   }));
 }
 
@@ -25,7 +22,7 @@ export function createMessage(role, content, ts = new Date()) {
   return {
     role,
     content,
-    ts: toIsoString(ts)
+    ts: toTimestampString(ts)
   };
 }
 
@@ -40,22 +37,18 @@ export function buildExportPayload(sessionId, history = []) {
   };
 }
 
-export function buildExportFilename(date = new Date()) {
-  const year = date.getFullYear();
-  const month = pad(date.getMonth() + 1);
-  const day = pad(date.getDate());
-  const hours = pad(date.getHours());
-  const minutes = pad(date.getMinutes());
-  const seconds = pad(date.getSeconds());
+export function buildExportFilename(sessionId, date = new Date()) {
+  const parts = getUtc8Parts(date);
+  const prefix = typeof sessionId === "string" && sessionId.trim() ? sessionId.trim() : "session";
 
-  return `session_${year}${month}${day}_${hours}${minutes}${seconds}.json`;
+  return `${prefix}_${parts.year}${parts.month}${parts.day}_${parts.hours}${parts.minutes}${parts.seconds}.json`;
 }
 
 export async function exportHistory(sessionId, history = []) {
   await fs.mkdir(exportsDir, { recursive: true });
 
   const payload = buildExportPayload(sessionId, history);
-  const filename = buildExportFilename();
+  const filename = buildExportFilename(sessionId);
   const filePath = path.join(exportsDir, filename);
 
   await fs.writeFile(filePath, `${JSON.stringify(payload, null, 2)}\n`, "utf-8");

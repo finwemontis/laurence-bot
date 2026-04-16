@@ -1,14 +1,20 @@
 import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs/promises";
+import { randomUUID } from "crypto";
+import { applySessionDecay, getLockedReply } from "./sessionGuard.js";
+import { formatUtc8Timestamp, getUtc8Parts } from "../utils/time.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const stateDir = path.resolve(__dirname, "../../data/state");
-const sessionStateFile = path.join(stateDir, "session-state.json");
+const sessionsDir = path.resolve(__dirname, "../../data/sessions");
+const SESSION_STATE_FILENAME = "session-state.json";
+const DEBUG_STATE_FILENAME = "debug-state.json";
+const TEMP_SUFFIX = ".tmp";
 
 const RELATIONSHIP_MAX = 10;
 const CONDITION_MAX = 100;
+const SESSION_ID_PATTERN = /^[A-Za-z0-9_-]{1,128}$/;
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
@@ -38,11 +44,42 @@ function clampConditionGroup(group = {}) {
   };
 }
 
-export function createDefaultSessionState(sessionId = "session_001", now = new Date()) {
-  const timestamp = now.toISOString();
+function formatSessionId(now = new Date()) {
+  const parts = getUtc8Parts(now);
+  return `session_${parts.year}${parts.month}${parts.day}-${parts.hours}${parts.minutes}${parts.seconds}`;
+}
+
+export function createSessionId(now = new Date()) {
+  return `session_${randomUUID()}_${formatSessionId(now)}`;
+}
+
+export function ensureSessionId(sessionId, now = new Date()) {
+  const normalized = typeof sessionId === "string" ? sessionId.trim() : "";
+  return SESSION_ID_PATTERN.test(normalized) ? normalized : createSessionId(now);
+}
+
+function getSessionDir(sessionId) {
+  return path.join(sessionsDir, sessionId);
+}
+
+function getSessionStateFile(sessionId) {
+  return path.join(getSessionDir(sessionId), SESSION_STATE_FILENAME);
+}
+
+function getDebugStateFile(sessionId) {
+  return path.join(getSessionDir(sessionId), DEBUG_STATE_FILENAME);
+}
+
+function getTempFilePath(filePath) {
+  return `${filePath}${TEMP_SUFFIX}`;
+}
+
+export function createDefaultSessionState(sessionId = null, now = new Date()) {
+  const resolvedSessionId = ensureSessionId(sessionId, now);
+  const timestamp = formatUtc8Timestamp(now);
 
   return {
-    sessionId,
+    sessionId: resolvedSessionId,
     meta: {
       createdAt: timestamp,
       updatedAt: timestamp,
@@ -94,13 +131,14 @@ export function createDefaultSessionState(sessionId = "session_001", now = new D
   };
 }
 
-function normalizeSessionState(value) {
-  const defaults = createDefaultSessionState();
+function normalizeSessionState(value, sessionId = null) {
+  const defaults = createDefaultSessionState(sessionId);
   const state = value || {};
 
   return {
     ...defaults,
     ...state,
+    sessionId: ensureSessionId(state.sessionId || defaults.sessionId),
     meta: {
       ...defaults.meta,
       ...(state.meta || {})
@@ -137,18 +175,35 @@ function normalizeSessionState(value) {
 }
 
 async function writeRawSessionState(state) {
-  await fs.mkdir(stateDir, { recursive: true });
-  await fs.writeFile(sessionStateFile, `${JSON.stringify(state, null, 2)}\n`, "utf-8");
-  return state;
+  const normalized = normalizeSessionState(state, state?.sessionId);
+  const sessionId = normalized.sessionId;
+  const sessionDir = getSessionDir(sessionId);
+  const sessionStateFile = getSessionStateFile(sessionId);
+  const debugStateFile = getDebugStateFile(sessionId);
+  const sessionStateTempFile = getTempFilePath(sessionStateFile);
+  const debugStateTempFile = getTempFilePath(debugStateFile);
+  const stateContent = `${JSON.stringify(normalized, null, 2)}\n`;
+  const debugContent = `${JSON.stringify(snapshotSessionState(normalized), null, 2)}\n`;
+
+  await fs.mkdir(sessionDir, { recursive: true });
+  await fs.writeFile(sessionStateTempFile, stateContent, "utf-8");
+  await fs.rename(sessionStateTempFile, sessionStateFile);
+  await fs.writeFile(debugStateTempFile, debugContent, "utf-8");
+  await fs.rename(debugStateTempFile, debugStateFile);
+
+  return normalized;
 }
 
-export async function readSessionState() {
+export async function readSessionState(sessionId) {
+  const resolvedSessionId = ensureSessionId(sessionId);
+  const sessionStateFile = getSessionStateFile(resolvedSessionId);
+
   try {
     const raw = await fs.readFile(sessionStateFile, "utf-8");
-    return normalizeSessionState(JSON.parse(raw));
+    return normalizeSessionState(JSON.parse(raw), resolvedSessionId);
   } catch (error) {
     if (error && error.code === "ENOENT") {
-      const initialState = createDefaultSessionState();
+      const initialState = createDefaultSessionState(resolvedSessionId);
       await writeRawSessionState(initialState);
       return initialState;
     }
@@ -158,13 +213,27 @@ export async function readSessionState() {
 }
 
 export async function saveSessionState(state, now = new Date()) {
-  const normalized = normalizeSessionState(clone(state));
-  normalized.meta.updatedAt = now.toISOString();
+  const normalized = normalizeSessionState(clone(state), state?.sessionId);
+  normalized.meta.updatedAt = formatUtc8Timestamp(now);
   normalized.meta.version = Math.max(1, Number(normalized.meta.version || 1)) + 1;
   return writeRawSessionState(normalized);
 }
 
-export async function resetSessionState(sessionId = "session_001", now = new Date()) {
+export async function readActiveSessionState(sessionId, now = new Date()) {
+  return applySessionDecay(await readSessionState(sessionId), now);
+}
+
+export async function updateSessionState(sessionId, updater, now = new Date()) {
+  const currentState = await readActiveSessionState(sessionId, now);
+  const nextState = await updater(clone(currentState));
+  return saveSessionState(nextState, now);
+}
+
+export async function readActiveLockMessage(sessionId, now = new Date()) {
+  return getLockedReply(await readActiveSessionState(sessionId, now), now);
+}
+
+export async function resetSessionState(sessionId, now = new Date()) {
   return writeRawSessionState(createDefaultSessionState(sessionId, now));
 }
 
@@ -177,5 +246,5 @@ export function isSessionLocked(state, now = new Date()) {
 }
 
 export function snapshotSessionState(state) {
-  return clone(normalizeSessionState(state));
+  return clone(normalizeSessionState(state, state?.sessionId));
 }

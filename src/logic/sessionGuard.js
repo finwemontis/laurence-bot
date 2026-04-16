@@ -1,5 +1,5 @@
-import { isSessionLocked } from "./stateService.js";
 import { applyScheduleToSessionState } from "./scheduleGuard.js";
+import { formatUtc8Timestamp } from "../utils/time.js";
 import {
   BASE_OFFENSE_PATTERNS,
   DEEP_PRIVATE_KEYWORDS,
@@ -116,6 +116,18 @@ function detectTopic(message, previousTopic = null) {
   }
 
   return previousTopic;
+}
+
+function cloneSessionState(sessionState) {
+  return JSON.parse(JSON.stringify(sessionState));
+}
+
+function syncIrritabilityFromRelationship(state) {
+  state.condition.irritability = clampCondition(
+    RELATIONSHIP_BASE_IRRITABILITY + state.relationship.annoyance * 5 + state.relationship.offense * 5
+  );
+
+  return state;
 }
 
 function scoreMoodTarget(condition, target, weights) {
@@ -414,9 +426,15 @@ function buildDerived(state) {
   };
 }
 
+function finalizeSessionState(sessionState, now = new Date()) {
+  const state = applyScheduleToSessionState(syncIrritabilityFromRelationship(cloneSessionState(sessionState)), now);
+  state.derived = buildDerived(state);
+  return state;
+}
+
 export function applySessionDecay(sessionState, now = new Date()) {
-  let state = JSON.parse(JSON.stringify(sessionState));
-  const previous = new Date(state.meta.updatedAt || state.meta.createdAt || now.toISOString());
+  let state = cloneSessionState(sessionState);
+  const previous = new Date(state.meta.updatedAt || state.meta.createdAt || formatUtc8Timestamp(now));
   const elapsedMinutes = Math.max(0, Math.floor((now.getTime() - previous.getTime()) / 60000));
 
   if (elapsedMinutes >= 30) {
@@ -454,13 +472,7 @@ export function applySessionDecay(sessionState, now = new Date()) {
     }
   }
 
-  state.condition.irritability = clampCondition(
-    RELATIONSHIP_BASE_IRRITABILITY + state.relationship.annoyance * 5 + state.relationship.offense * 5
-  );
-  state = applyScheduleToSessionState(state, now);
-  state.derived = buildDerived(state);
-
-  return state;
+  return finalizeSessionState(state, now);
 }
 
 export function applyUserMessageToSessionState(sessionState, message, now = new Date()) {
@@ -488,11 +500,11 @@ export function applyUserMessageToSessionState(sessionState, message, now = new 
   const offenseMultiplier = repeatedOffenseContext ? 2 : 1;
 
   state.conversation.turnCount += 1;
-  state.conversation.lastUserMessageAt = now.toISOString();
+  state.conversation.lastUserMessageAt = formatUtc8Timestamp(now);
   state.conversation.currentTopic = nextTopic;
 
   if (restRequest) {
-    state.schedule.lastSleepDisturbAt = now.toISOString();
+    state.schedule.lastSleepDisturbAt = formatUtc8Timestamp(now);
 
     if (state.schedule.sleepDisturbCount === 0) {
       state.relationship.annoyance = clampRelationship(5);
@@ -601,26 +613,19 @@ export function applyUserMessageToSessionState(sessionState, message, now = new 
   }
 
   state.conversation.lastUserMessageText = normalizedText || null;
-  state.condition.irritability = clampCondition(
-    RELATIONSHIP_BASE_IRRITABILITY + state.relationship.annoyance * 5 + state.relationship.offense * 5
-  );
-  state = applyScheduleToSessionState(state, now);
-  state.derived = buildDerived(state);
 
-  return state;
+  return finalizeSessionState(state, now);
 }
 
 export function applyAssistantReplyToSessionState(sessionState, reply, now = new Date()) {
   let state = applySessionDecay(sessionState, now);
-  state.conversation.lastAssistantMessageAt = now.toISOString();
+  state.conversation.lastAssistantMessageAt = formatUtc8Timestamp(now);
 
   if (/不能|不会|拒绝|不谈/i.test(reply)) {
     state.privacy.refusalCount = clampCondition(state.privacy.refusalCount + 1);
   }
 
-  state = applyScheduleToSessionState(state, now);
-  state.derived = buildDerived(state);
-  return state;
+  return finalizeSessionState(state, now);
 }
 
 export function buildSessionStatePrompt(state) {
@@ -713,10 +718,11 @@ export function buildSessionStatePrompt(state) {
 }
 
 
-export function getLockedReply(sessionState) {
-  if (!isSessionLocked(sessionState)) {
+export function getLockedReply(sessionState, now = new Date()) {
+  const lockedUntil = sessionState?.lock?.lockedUntil;
+  if (!lockedUntil || new Date(lockedUntil).getTime() <= now.getTime()) {
     return null;
   }
 
-  return `当前会话已锁定，锁定到 ${sessionState.lock.lockedUntil}。如需恢复，请使用 /debug unlock`;
+  return `当前会话已锁定，锁定到 ${lockedUntil}。如需恢复，请使用 /debug unlock`;
 }

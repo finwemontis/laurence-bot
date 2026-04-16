@@ -1,42 +1,42 @@
 {
-  "sessionId": "session_001",
+  "sessionId": "session_default",
   "meta": {
-    "createdAt": "2026-04-15T10:12:23.862Z",
-    "updatedAt": "2026-04-15T11:54:16.913Z",
-    "version": 10
+    "createdAt": "",
+    "updatedAt": "2026-04-16T18:15:44+08:00",
+    "version": 14
   },
   "lock": {
     "lockedUntil": null,
     "reason": null
   },
   "relationship": {
-    "trust": 4,
+    "trust": 6,
     "familiarity": 1,
-    "annoyance": 9,
+    "annoyance": 5,
     "offense": 0,
     "boundaryPressure": 0
   },
   "condition": {
-    "fatigue": 100,
-    "busyness": 5,
-    "irritability": 55,
-    "hunger": 22,
+    "fatigue": 92,
+    "busyness": 24,
+    "irritability": 35,
+    "hunger": 14,
     "health": 85
   },
   "schedule": {
-    "mode": "sleep",
+    "mode": "meal",
     "sleepDisturbCount": 9,
-    "lastSleepDisturbAt": "2026-04-15T11:54:15.488Z"
+    "lastSleepDisturbAt": ""
   },
   "conversation": {
-    "turnCount": 9,
+    "turnCount": 13,
     "currentTopic": "daily_life",
     "sensitiveTopicCount": 0,
     "offensiveCount": 0,
     "repeatedMessageCount": 0,
-    "lastUserMessageAt": "2026-04-15T11:54:15.488Z",
-    "lastAssistantMessageAt": "2026-04-15T11:54:16.913Z",
-    "lastUserMessageText": "你好"
+    "lastUserMessageAt": "2026-04-16T18:15:42+08:00",
+    "lastAssistantMessageAt": "2026-04-16T18:15:44+08:00",
+    "lastUserMessageText": "你在做什么呢"
   },
   "privacy": {
     "privacyStrikes": 0,
@@ -44,8 +44,8 @@
     "refusalCount": 0
   },
   "derived": {
-    "mood": "irritated",
-    "availability": "rest",
-    "toneBias": "sharp"
+    "mood": "tired",
+    "availability": "limited",
+    "toneBias": "neutral"
   }
 }

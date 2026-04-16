@@ -1,6 +1,12 @@
 import { ensureMessageTimestamps, exportHistory } from "../services/historyService.js";
-import { readSessionState, resetSessionState, saveSessionState, snapshotSessionState } from "./stateService.js";
-import { applySessionDecay, getLockedReply } from "./sessionGuard.js";
+import {
+  readActiveLockMessage,
+  readActiveSessionState,
+  resetSessionState,
+  snapshotSessionState,
+  updateSessionState
+} from "./stateService.js";
+import { formatUtc8Timestamp } from "../utils/time.js";
 
 function parseLockDuration(input) {
   const match = /^([0-9]+)([mh])$/i.exec((input || "").trim());
@@ -16,7 +22,7 @@ function parseLockDuration(input) {
   return minutes > 0 ? minutes : null;
 }
 
-export async function handleDebugCommand(message, history = []) {
+export async function handleDebugCommand(message, history = [], sessionId) {
   const trimmed = message.trim();
 
   if (!trimmed.startsWith("/debug")) {
@@ -24,7 +30,7 @@ export async function handleDebugCommand(message, history = []) {
   }
 
   const safeHistory = ensureMessageTimestamps(history);
-  const state = applySessionDecay(await readSessionState());
+  const state = await readActiveSessionState(sessionId);
   const parts = trimmed.split(/\s+/);
   const action = parts[1] || "";
   const arg = parts[2] || "";
@@ -34,6 +40,7 @@ export async function handleDebugCommand(message, history = []) {
 
     return {
       handled: true,
+      sessionId: state.sessionId,
       reply: `已导出当前对话到 ${result.filename}`,
       history: safeHistory,
       meta: {
@@ -47,6 +54,7 @@ export async function handleDebugCommand(message, history = []) {
   if (action === "state") {
     return {
       handled: true,
+      sessionId: state.sessionId,
       reply: JSON.stringify(snapshotSessionState(state), null, 2),
       history: safeHistory,
       meta: {
@@ -61,6 +69,7 @@ export async function handleDebugCommand(message, history = []) {
 
     return {
       handled: true,
+      sessionId: nextState.sessionId,
       reply: "已重置当前会话 history 和 session state，并解除锁定。",
       history: [],
       meta: {
@@ -76,6 +85,7 @@ export async function handleDebugCommand(message, history = []) {
     if (!minutes) {
       return {
         handled: true,
+        sessionId: state.sessionId,
         reply: "锁定时长格式无效，请使用例如 /debug lock 10m 或 /debug lock 1h",
         history: safeHistory,
         meta: {
@@ -84,12 +94,15 @@ export async function handleDebugCommand(message, history = []) {
       };
     }
 
-    state.lock.lockedUntil = new Date(Date.now() + minutes * 60 * 1000).toISOString();
-    state.lock.reason = "debug";
-    const nextState = await saveSessionState(state);
+    const nextState = await updateSessionState(state.sessionId, (currentState) => {
+      currentState.lock.lockedUntil = formatUtc8Timestamp(new Date(Date.now() + minutes * 60 * 1000));
+      currentState.lock.reason = "debug";
+      return currentState;
+    });
 
     return {
       handled: true,
+      sessionId: nextState.sessionId,
       reply: `已锁定，持续 ${arg}，到 ${nextState.lock.lockedUntil}`,
       history: safeHistory,
       meta: {
@@ -100,12 +113,15 @@ export async function handleDebugCommand(message, history = []) {
   }
 
   if (action === "unlock") {
-    state.lock.lockedUntil = null;
-    state.lock.reason = null;
-    const nextState = await saveSessionState(state);
+    const nextState = await updateSessionState(state.sessionId, (currentState) => {
+      currentState.lock.lockedUntil = null;
+      currentState.lock.reason = null;
+      return currentState;
+    });
 
     return {
       handled: true,
+      sessionId: nextState.sessionId,
       reply: "已解除锁定。",
       history: safeHistory,
       meta: {
@@ -117,6 +133,7 @@ export async function handleDebugCommand(message, history = []) {
 
   return {
     handled: true,
+    sessionId: state.sessionId,
     reply: "未知调试命令。可用命令：/debug export、/debug state、/debug reset、/debug lock 10m、/debug unlock",
     history: safeHistory,
     meta: {
@@ -125,7 +142,6 @@ export async function handleDebugCommand(message, history = []) {
   };
 }
 
-export async function getActiveLockMessage() {
-  const state = applySessionDecay(await readSessionState());
-  return getLockedReply(state);
+export async function getActiveLockMessage(sessionId) {
+  return readActiveLockMessage(sessionId);
 }

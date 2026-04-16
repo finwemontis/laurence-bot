@@ -1,0 +1,51 @@
+{
+  "sessionId": "session_1776336123496_awhy0wpd",
+  "meta": {
+    "createdAt": "2026-04-16T18:42:03+08:00",
+    "updatedAt": "2026-04-16T19:02:37+08:00",
+    "version": 23
+  },
+  "lock": {
+    "lockedUntil": null,
+    "reason": null
+  },
+  "relationship": {
+    "trust": 1,
+    "familiarity": 1,
+    "annoyance": 10,
+    "offense": 0,
+    "boundaryPressure": 0
+  },
+  "condition": {
+    "fatigue": 100,
+    "busyness": 26,
+    "irritability": 60,
+    "hunger": 28,
+    "health": 85
+  },
+  "schedule": {
+    "mode": "evening",
+    "sleepDisturbCount": 0,
+    "lastSleepDisturbAt": null
+  },
+  "conversation": {
+    "turnCount": 22,
+    "currentTopic": "church",
+    "sensitiveTopicCount": 1,
+    "offensiveCount": 0,
+    "repeatedMessageCount": 0,
+    "lastUserMessageAt": "2026-04-16T19:02:34+08:00",
+    "lastAssistantMessageAt": "2026-04-16T19:02:37+08:00",
+    "lastUserMessageText": "哦看来教会的工匠会写代码"
+  },
+  "privacy": {
+    "privacyStrikes": 0,
+    "lastSensitiveTopic": "ludwig_relationship",
+    "refusalCount": 0
+  },
+  "derived": {
+    "mood": "irritated",
+    "availability": "open",
+    "toneBias": "sharp"
+  }
+}
