@@ -481,7 +481,7 @@ function buildDerived(state) {
 
 
 // 7. state收尾 
-function finalizeSessionState(sessionState, now = new Date()) {
+export function finalizeSessionState(sessionState, now = new Date()) {
   const state = applyScheduleToSessionState(syncIrritabilityFromRelationship(cloneSessionState(sessionState)), now);
   state.derived = buildDerived(state);
   return state;
@@ -712,10 +712,24 @@ export function applyAssistantReplyToSessionState(sessionState, reply, now = new
 // 10. 将state翻译成prompt 控制本回合语气 态度 边界
 export function buildSessionStatePrompt(state) {
   const snapshot = finalizeSessionState(state, new Date());
-  const { derived, relationship, condition, conversation, privacy } = snapshot;
+  const { derived, relationship, condition, conversation, privacy, schedule } = snapshot;
+  const currentBlock = schedule?.currentBlock || null;
+  const currentBlockDetails = Array.isArray(currentBlock?.details)
+    ? currentBlock.details.join("；")
+    : currentBlock?.details || null;
+  const currentBlockSummary = currentBlock
+    ? [
+        currentBlock.label || currentBlock.type,
+        currentBlock.modeName ? `当前事项：${currentBlock.modeName}` : null,
+        currentBlock.location ? `地点：${currentBlock.location}` : null,
+        currentBlock.start && currentBlock.end ? `${currentBlock.start}-${currentBlock.end}` : null
+      ]
+        .filter(Boolean)
+        .join("；")
+    : "未命中明确日程，按普通工作状态处理。";
 
   const moodMap = {
-    // ???? 增加依赖
+    // ???? 增加依赖 示弱
     happy: "心情很好，愿意给一点真实温度",
     warm: "态度偏温和，能给出克制的亲近感",
     calm: "状态平稳，语气自然克制",
@@ -787,6 +801,8 @@ export function buildSessionStatePrompt(state) {
     `- 情绪基调：${moodMap[derived.mood] || "状态复杂，但整体要克制。"}`,
     `- 可用状态：${availabilityMap[derived.availability] || "可用状态有限，避免过度展开。"}`,
     `- 语气倾向：${toneMap[derived.toneBias] || "语气保持稳定克制。"}`,
+    `- 当前日程：${currentBlockSummary}`,
+    currentBlockDetails ? `- 当前事务细节：${currentBlockDetails}` : null,
     `- 对来访者态度：${attitudeToUser}`,
     `- 当前话题：${conversation.currentTopic || "延续上一话题或普通来访对话。"}`,
     "",
@@ -794,11 +810,12 @@ export function buildSessionStatePrompt(state) {
     `- ${lengthRule}`,
     `- ${boundaryRule}`,
     `- ${topicRule}`,
+    currentBlock ? `- 当前主要在处理“${currentBlock.label || currentBlock.type}”，回答应服从这个时间段的事务状态，不要表现得像完全空闲。` : null,
     "- 不要模板化寒暄，不要自报身份，不要使用客服式接待语。",
     "- 先回答眼前问题，再决定是否补充一句态度或判断；不要把回复写成说明书。",
     "- 即使给温度，也要克制、稀薄、像本人压着情绪说出来，而不是热情外露。",
     "- 若需要拒绝或收口，措辞可以冷，但要像角色本人在设边界，不要像系统提示。"
-  ].join("\n");
+  ].filter(Boolean).join("\n");
 }
 
 

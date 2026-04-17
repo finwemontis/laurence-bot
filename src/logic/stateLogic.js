@@ -106,7 +106,8 @@ export function createDefaultSessionState(sessionId = null, now = new Date()) {
     schedule: {
       mode: "working",
       sleepDisturbCount: 0,
-      lastSleepDisturbAt: null
+      lastSleepDisturbAt: null,
+      currentBlock: null
     },
     conversation: {
       turnCount: 0,

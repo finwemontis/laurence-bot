@@ -9,6 +9,9 @@ function getLocalParts(date, timeZone = scheduleConfig.timezone) {
   const formatter = new Intl.DateTimeFormat("en-US", {
     timeZone,
     weekday: "long",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
     hourCycle: "h23"
@@ -19,6 +22,7 @@ function getLocalParts(date, timeZone = scheduleConfig.timezone) {
 
   return {
     weekday: String(map.weekday || "").toLowerCase(),
+    dateKey: `${map.year}-${map.month}-${map.day}`,
     minutes: Number(map.hour) * 60 + Number(map.minute)
   };
 }
@@ -97,14 +101,82 @@ function getFallbackCondition(mode, availability) {
   };
 }
 
-export function resolveScheduleState(now = new Date()) {
+function hashString(value) {
+  let hash = 0;
+
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash * 31 + value.charCodeAt(index)) >>> 0;
+  }
+
+  return hash;
+}
+
+function pickBlockMode(block, sessionState, local) {
+  if (!Array.isArray(block?.modes) || block.modes.length === 0) {
+    return {
+      selectedMode: null,
+      selectedModeIndex: null
+    };
+  }
+
+  const sessionId = sessionState?.sessionId || "session";
+  const seed = `${sessionId}:${local.dateKey}:${block.start}-${block.end}:${block.type}`;
+  const selectedModeIndex = hashString(seed) % block.modes.length;
+
+  return {
+    selectedMode: block.modes[selectedModeIndex],
+    selectedModeIndex
+  };
+}
+
+function normalizeDetails(details) {
+  if (Array.isArray(details)) {
+    return details.filter(Boolean);
+  }
+
+  return details || null;
+}
+
+function buildCurrentBlock(activeBlock, selectedMode, selectedModeIndex, local) {
+  if (!activeBlock) {
+    return null;
+  }
+
+  const details = normalizeDetails(selectedMode?.details ?? activeBlock.details ?? null);
+  const location = selectedMode?.location ?? activeBlock.location ?? null;
+  const condition = activeBlock.condition ? { ...activeBlock.condition } : null;
+
+  return {
+    blockKey: `${local.dateKey}:${activeBlock.start}-${activeBlock.end}:${activeBlock.type}`,
+    weekday: local.weekday,
+    dateKey: local.dateKey,
+    start: activeBlock.start,
+    end: activeBlock.end,
+    crossesMidnight: Boolean(activeBlock.crossesMidnight),
+    type: activeBlock.type,
+    label: activeBlock.label || activeBlock.type,
+    availability: activeBlock.availability || "limited",
+    condition,
+    location,
+    details,
+    modeName: selectedMode?.name || null,
+    modeIndex: selectedModeIndex,
+    modeDetails: normalizeDetails(selectedMode?.details ?? null)
+  };
+}
+
+export function resolveScheduleState(sessionState = null, now = new Date()) {
   const local = getLocalParts(now);
   const daySchedule = getDaySchedule(local.weekday);
   const activeBlock = daySchedule ? findActiveBlock(daySchedule.blocks, local.minutes) : null;
+  const { selectedMode, selectedModeIndex } = pickBlockMode(activeBlock, sessionState, local);
+  const currentBlock = buildCurrentBlock(activeBlock, selectedMode, selectedModeIndex, local);
 
   return {
     weekday: local.weekday,
+    dateKey: local.dateKey,
     activeBlock,
+    currentBlock,
     mode: activeBlock?.type || "working",
     availability: activeBlock?.availability || "limited",
     condition:
@@ -115,11 +187,12 @@ export function resolveScheduleState(now = new Date()) {
 
 export function applyScheduleToSessionState(sessionState, now = new Date()) {
   const state = JSON.parse(JSON.stringify(sessionState));
-  const scheduleState = resolveScheduleState(now);
+  const scheduleState = resolveScheduleState(state, now);
   const currentCondition = state.condition || {};
   const scheduleCondition = scheduleState.condition || {};
 
   state.schedule.mode = scheduleState.mode;
+  state.schedule.currentBlock = scheduleState.currentBlock;
   state.derived.availability = scheduleState.availability;
   state.condition = {
     ...currentCondition,

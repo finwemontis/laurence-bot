@@ -25,7 +25,7 @@ function parseLockDuration(input) {
 export async function handleDebugCommand(message, history = [], sessionId) {
   const trimmed = message.trim();
 
-  if (!trimmed.startsWith("/debug")) {
+  if (!trimmed.startsWith("/tune")) {
     return null;
   }
 
@@ -86,7 +86,7 @@ export async function handleDebugCommand(message, history = [], sessionId) {
       return {
         handled: true,
         sessionId: state.sessionId,
-        reply: "锁定时长格式无效，请使用例如 /debug lock 10m 或 /debug lock 1h",
+        reply: "锁定时长格式无效，请使用例如 /tune lock 10m 或 /tune lock 1h",
         history: safeHistory,
         meta: {
           command: "lock_invalid"
@@ -134,7 +134,7 @@ export async function handleDebugCommand(message, history = [], sessionId) {
   return {
     handled: true,
     sessionId: state.sessionId,
-    reply: "未知调试命令。可用命令：/debug export、/debug state、/debug reset、/debug lock 10m、/debug unlock",
+    reply: "未知调试命令。可用命令：/tune export、/tune state、/tune reset、/tune lock 10m、/tune unlock",
     history: safeHistory,
     meta: {
       command: "unknown"
