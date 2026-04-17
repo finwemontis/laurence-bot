@@ -1,4 +1,5 @@
 import { buildSessionStatePrompt } from "../logic/sessionGuard.js";
+import { RELATIONSHIP_PATTERNS } from "../config/sessionKeywords.js";
 
 function sanitizeHistory(history = []) {
   if (!Array.isArray(history)) {
@@ -31,17 +32,27 @@ function buildOpeningGuard(history) {
   ];
 }
 
+function shouldIncludeLudwigRelation(message, sessionState) {
+  const relationshipTopic = sessionState?.conversation?.currentTopic === "ludwig_relationship";
+  const relationshipKeyword = typeof message === "string" && RELATIONSHIP_PATTERNS.some((pattern) => pattern.test(message));
+
+  return relationshipKeyword || relationshipTopic;
+}
+
 export function buildPrompt({ message, history = [], lore, sessionState = null }) {
   const sanitizedHistory = sanitizeHistory(history);
   const openingGuard = buildOpeningGuard(sanitizedHistory);
   const sessionStatePrompt = sessionState
     ? [{ role: "system", content: buildSessionStatePrompt(sessionState) }]
     : [];
+  const ludwigRelationPrompt = shouldIncludeLudwigRelation(message, sessionState)
+    ? [{ role: "system", content: lore.ludwigRelation }]
+    : [];
 
   const messages = [
     { role: "system", content: lore.promptCore },
     { role: "system", content: lore.laurenceCard },
-    { role: "system", content: lore.ludwigRelation },
+    ...ludwigRelationPrompt,
     ...sessionStatePrompt,
     ...openingGuard,
     ...sanitizedHistory,

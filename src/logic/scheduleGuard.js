@@ -111,6 +111,45 @@ function hashString(value) {
   return hash;
 }
 
+function normalizeWeight(value) {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) && numeric > 0 ? numeric : 1;
+}
+
+function pickWeightedEntry(entries, seed) {
+  if (!Array.isArray(entries) || entries.length === 0) {
+    return {
+      selectedEntry: null,
+      selectedIndex: null
+    };
+  }
+
+  const weightedEntries = entries.map((entry, index) => ({
+    entry,
+    index,
+    weight: normalizeWeight(entry?.weight)
+  }));
+  const totalWeight = weightedEntries.reduce((sum, item) => sum + item.weight, 0);
+  let cursor = hashString(seed) % totalWeight;
+
+  for (const item of weightedEntries) {
+    if (cursor < item.weight) {
+      return {
+        selectedEntry: item.entry,
+        selectedIndex: item.index
+      };
+    }
+
+    cursor -= item.weight;
+  }
+
+  const fallback = weightedEntries[weightedEntries.length - 1];
+  return {
+    selectedEntry: fallback.entry,
+    selectedIndex: fallback.index
+  };
+}
+
 function pickBlockMode(block, sessionState, local) {
   if (!Array.isArray(block?.modes) || block.modes.length === 0) {
     return {
@@ -120,12 +159,31 @@ function pickBlockMode(block, sessionState, local) {
   }
 
   const sessionId = sessionState?.sessionId || "session";
-  const seed = `${sessionId}:${local.dateKey}:${block.start}-${block.end}:${block.type}`;
-  const selectedModeIndex = hashString(seed) % block.modes.length;
+  const seed = `${sessionId}:${local.dateKey}:${block.start}-${block.end}:${block.type}:mode`;
+  const { selectedEntry, selectedIndex } = pickWeightedEntry(block.modes, seed);
 
   return {
-    selectedMode: block.modes[selectedModeIndex],
-    selectedModeIndex
+    selectedMode: selectedEntry,
+    selectedModeIndex: selectedIndex
+  };
+}
+
+function pickModeItem(block, selectedMode, selectedModeIndex, sessionState, local) {
+  if (!Array.isArray(selectedMode?.items) || selectedMode.items.length === 0) {
+    return {
+      selectedItem: null,
+      selectedItemIndex: null
+    };
+  }
+
+  const sessionId = sessionState?.sessionId || "session";
+  const modeKey = selectedMode?.name || selectedMode?.label || selectedModeIndex || "mode";
+  const seed = `${sessionId}:${local.dateKey}:${block.start}-${block.end}:${block.type}:${modeKey}:item`;
+  const { selectedEntry, selectedIndex } = pickWeightedEntry(selectedMode.items, seed);
+
+  return {
+    selectedItem: selectedEntry,
+    selectedItemIndex: selectedIndex
   };
 }
 
@@ -137,13 +195,13 @@ function normalizeDetails(details) {
   return details || null;
 }
 
-function buildCurrentBlock(activeBlock, selectedMode, selectedModeIndex, local) {
+function buildCurrentBlock(activeBlock, selectedMode, selectedModeIndex, selectedItem, selectedItemIndex, local) {
   if (!activeBlock) {
     return null;
   }
 
-  const details = normalizeDetails(selectedMode?.details ?? activeBlock.details ?? null);
-  const location = selectedMode?.location ?? activeBlock.location ?? null;
+  const details = normalizeDetails(selectedItem?.details ?? null);
+  const location = selectedItem?.location ?? selectedMode?.location ?? activeBlock.location ?? null;
   const condition = activeBlock.condition ? { ...activeBlock.condition } : null;
 
   return {
@@ -160,8 +218,10 @@ function buildCurrentBlock(activeBlock, selectedMode, selectedModeIndex, local) 
     location,
     details,
     modeName: selectedMode?.name || null,
+    modeLabel: selectedMode?.label || null,
     modeIndex: selectedModeIndex,
-    modeDetails: normalizeDetails(selectedMode?.details ?? null)
+    itemLabel: selectedItem?.label || null,
+    itemIndex: selectedItemIndex
   };
 }
 
@@ -170,7 +230,21 @@ export function resolveScheduleState(sessionState = null, now = new Date()) {
   const daySchedule = getDaySchedule(local.weekday);
   const activeBlock = daySchedule ? findActiveBlock(daySchedule.blocks, local.minutes) : null;
   const { selectedMode, selectedModeIndex } = pickBlockMode(activeBlock, sessionState, local);
-  const currentBlock = buildCurrentBlock(activeBlock, selectedMode, selectedModeIndex, local);
+  const { selectedItem, selectedItemIndex } = pickModeItem(
+    activeBlock,
+    selectedMode,
+    selectedModeIndex,
+    sessionState,
+    local
+  );
+  const currentBlock = buildCurrentBlock(
+    activeBlock,
+    selectedMode,
+    selectedModeIndex,
+    selectedItem,
+    selectedItemIndex,
+    local
+  );
 
   return {
     weekday: local.weekday,

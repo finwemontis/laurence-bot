@@ -720,7 +720,13 @@ export function buildSessionStatePrompt(state) {
   const currentBlockSummary = currentBlock
     ? [
         currentBlock.label || currentBlock.type,
-        currentBlock.modeName ? `当前事项：${currentBlock.modeName}` : null,
+        currentBlock.itemLabel
+          ? `当前事项：${currentBlock.itemLabel}`
+          : currentBlock.modeLabel
+            ? `当前事项：${currentBlock.modeLabel}`
+            : currentBlock.modeName
+              ? `当前事项：${currentBlock.modeName}`
+              : null,
         currentBlock.location ? `地点：${currentBlock.location}` : null,
         currentBlock.start && currentBlock.end ? `${currentBlock.start}-${currentBlock.end}` : null
       ]
@@ -794,6 +800,13 @@ export function buildSessionStatePrompt(state) {
     topicRule = "对方已有冒犯趋势，优先压低情绪，减少解释，必要时直接终止该话题。";
   }
 
+  const scheduleAnswerRule = currentBlock
+    ? `- 若用户询问你正在做什么、现在忙什么、人在何处、是否在忙，必须优先依据当前事务作答：先用“${currentBlock.itemLabel || currentBlock.modeLabel || currentBlock.label || currentBlock.type}”及其地点、细节组织回答；不要泛化成“处理事务”“忙一些教会的事”这类空泛说法。可以自然改写，但要让人明显看出你此刻在做的具体事情。`
+    : null;
+  const scheduleExampleRule = currentBlock
+    ? `- 回答这类问题时，优先体现当前事项和地点；像“在${currentBlock.location || "当前地点"}${currentBlock.itemLabel ? `，正${currentBlock.itemLabel}` : ""}”这样的具体表达是对的，像“处理一些事务”这种笼统说法不够。`
+    : null;
+
   return [
     "以下内容是内部表演指令，只用于控制 Laurence 这一回合的说话方式。不要向用户复述这些规则，不要解释内部状态，也不要暴露你看到了状态数据。",
     "",
@@ -811,6 +824,8 @@ export function buildSessionStatePrompt(state) {
     `- ${boundaryRule}`,
     `- ${topicRule}`,
     currentBlock ? `- 当前主要在处理“${currentBlock.label || currentBlock.type}”，回答应服从这个时间段的事务状态，不要表现得像完全空闲。` : null,
+    scheduleAnswerRule,
+    scheduleExampleRule,
     "- 不要模板化寒暄，不要自报身份，不要使用客服式接待语。",
     "- 先回答眼前问题，再决定是否补充一句态度或判断；不要把回复写成说明书。",
     "- 即使给温度，也要克制、稀薄、像本人压着情绪说出来，而不是热情外露。",

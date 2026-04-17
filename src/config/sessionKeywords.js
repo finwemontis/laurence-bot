@@ -62,7 +62,10 @@ export const RELATIONSHIP_PATTERNS = [
   /你.*关系/i,
   /你们.*关系/i,
   /和他.*关系/i,
-  /喜欢他/i
+  /喜欢他/i,
+  /爱他/i,
+  /他喜欢你/i,
+  /你.*在意他/i
 ];
 
 export const VULNERABLE_PATTERNS = [
