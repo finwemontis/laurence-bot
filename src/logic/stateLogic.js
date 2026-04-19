@@ -25,12 +25,15 @@ function clamp(value, min = 0, max = 100) {
 }
 
 function clampRelationshipGroup(group = {}) {
+  const currentCounterpart = typeof group.currentCounterpart === "string" ? group.currentCounterpart.trim() : "";
+
   return {
     trust: clamp(group.trust, 0, RELATIONSHIP_MAX),
     familiarity: clamp(group.familiarity, 0, RELATIONSHIP_MAX),
     annoyance: clamp(group.annoyance, 0, RELATIONSHIP_MAX),
     offense: clamp(group.offense, 0, RELATIONSHIP_MAX),
-    boundaryPressure: clamp(group.boundaryPressure, 0, RELATIONSHIP_MAX)
+    boundaryPressure: clamp(group.boundaryPressure, 0, RELATIONSHIP_MAX),
+    currentCounterpart: currentCounterpart || null
   };
 }
 
@@ -94,7 +97,8 @@ export function createDefaultSessionState(sessionId = null, now = new Date()) {
       familiarity: 1,
       annoyance: 0,
       offense: 0,
-      boundaryPressure: 0
+      boundaryPressure: 0,
+      currentCounterpart: "Ludwig"
     },
     condition: {
       fatigue: 20,

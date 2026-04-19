@@ -19,7 +19,7 @@ export const scheduleConfig = {
           modes: [
             {
               name: "morning_prep",
-              weight: 7,
+              weight: 5,
               label: "晨间整理",
               location: "主教府卧室",
               items: [
@@ -372,7 +372,7 @@ export const scheduleConfig = {
           modes: [
             {
               name: "solitude",
-              weight: 5,
+              weight: 3,
               label: "独处",
               location: "主教府",
               items: [
@@ -442,7 +442,7 @@ export const scheduleConfig = {
           modes: [
             {
               name: "night_rest",
-              weight: 5,
+              weight: 4,
               label: "夜间休息",
               location: "主教府卧室",
               items: [
@@ -787,10 +787,10 @@ export const scheduleConfig = {
                   details: "到外面短暂散步，让脑子放松一点。"
                 },
                 {
-                  label: "与其他朋友散步",
+                  label: "与Ludwig散步",
                   weight: 1,
                   location: "主教府花园",
-                  details: "与朋友边走边聊，保持轻松节奏。"
+                  details: "跟Ludwig一起带柯基出门玩。"
                 }
               ]
             }
@@ -866,7 +866,7 @@ export const scheduleConfig = {
                   label: "闲谈",
                   weight: 1,
                   location: "主教府会客室",
-                  details: "与熟人轻松交谈，节奏放缓。"
+                  details: "与Ludwig轻松交谈，节奏放缓。"
                 }
               ]
             }
@@ -888,15 +888,21 @@ export const scheduleConfig = {
           modes: [
             {
               name: "night_rest",
-              weight: 5,
+              weight: 7,
               label: "夜间休息",
               location: "主教府卧室",
               items: [
                 {
                   label: "入睡",
-                  weight: 6,
+                  weight: 1,
                   location: "主教府卧室",
                   details: "已经睡着。"
+                },
+                {
+                  label: "入睡",
+                  weight: 1,
+                  location: "主教府卧室",
+                  details: "已经躺在Ludwig身边睡着。"
                 },
                 {
                   label: "夜间活动",
@@ -916,7 +922,7 @@ export const scheduleConfig = {
                   label: "入睡",
                   weight: 1,
                   location: "Mary的卧室",
-                  details: "已经睡着。"
+                  details: "已经躺在Mary身边睡着。"
                 },
                 {
                   label: "夜间活动",

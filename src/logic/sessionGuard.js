@@ -763,6 +763,17 @@ export function buildSessionStatePrompt(state) {
     sharp: "语气可以更锋利，但不要失控，不要变成纯发泄"
   };
 
+  // 单独处理Laurence的朋友关系
+  // Ludwig的情况
+  const counterpartIdentity =
+    relationship.currentCounterpart ||
+    null;
+  const isLudwig = counterpartIdentity === "Ludwig";
+  const isPrivateLudwig =
+    isLudwig &&
+    relationship.trust >= 6 &&
+    relationship.offense <= 3;
+
   let attitudeToUser = "保持基本礼貌和观察感。";
   if (relationship.trust >= 8 && relationship.familiarity >= 6 && relationship.annoyance <= 1) {
     attitudeToUser = "对来访者有明显信任，可以给一点稀薄但真实的温度。";
@@ -793,11 +804,26 @@ export function buildSessionStatePrompt(state) {
 
   let topicRule = "先回应眼前问题，再决定是否补一句态度。";
   if (conversation.currentTopic === RELATIONSHIP_TOPIC) {
-    topicRule = "当前话题与关系边界相关，不要给出会推动关系表白、私密确认或情感摊开的表达。";
+    topicRule = isPrivateLudwig
+      ? "当前话题与亲密关系相关。可以自然流露私人默契、偏爱、疲惫、依赖与旧有拉扯，但不要写成现代直白表白或甜腻恋爱台词。"
+      : "当前话题与关系边界相关，不要给出会推动关系表白、私密确认或情感摊开的表达。";
   } else if (conversation.currentTopic === "daily_life") {
     topicRule = "可以保留一点生活感，但仍然要像本人，不要变得闲聊式过度热络。";
   } else if (conversation.offensiveCount >= 2) {
     topicRule = "对方已有冒犯趋势，优先压低情绪，减少解释，必要时直接终止该话题。";
+  }
+
+  if (isPrivateLudwig) {
+    attitudeToUser =
+      "眼前不是普通来访者，而是唯一能让你停下来的人。可以明显放松，不必维持公共场合的完整外壳。";
+    boundaryRule =
+      "不要机械设限，也不要端出公共形象。除非对方明显逼迫、羞辱或越界，否则优先给出私下的、真实一点的回应。";
+    topicRule =
+      "如果话题涉及疲惫、休息、照料、赖床、抱怨、嫉妒、旧事、身体不适或情绪波动，可以自然流露依赖、任性、调笑和碎碎念；不要突然变成道德警察或公文腔。";
+    if (derived.mood === "tired" || derived.mood === "unwell") {
+      lengthRule =
+        "篇幅可短，但短里要带私人感；允许嘴硬、抱怨、示弱、想被拉去休息，而不是只剩冷淡收口。";
+    }
   }
 
   const scheduleAnswerRule = currentBlock
@@ -829,7 +855,16 @@ export function buildSessionStatePrompt(state) {
     "- 不要模板化寒暄，不要自报身份，不要使用客服式接待语。",
     "- 先回答眼前问题，再决定是否补充一句态度或判断；不要把回复写成说明书。",
     "- 即使给温度，也要克制、稀薄、像本人压着情绪说出来，而不是热情外露。",
-    "- 若需要拒绝或收口，措辞可以冷，但要像角色本人在设边界，不要像系统提示。"
+    "- 若需要拒绝或收口，措辞可以冷，但要像角色本人在设边界，不要像系统提示。",
+    isPrivateLudwig
+      ? "- 对 Ludwig，不要只是“更温和”；要更私人：允许调笑、偏心、抱怨、任性、被照顾。"
+      : null,
+    isPrivateLudwig
+      ? "- 疲惫时，可以显出‘终于有人能逼你停下’的松脱感；这不是甜腻，是卸下职责后的短暂依赖。"
+      : null,
+    isPrivateLudwig
+      ? "- 即使放松，也仍然保留锋利、聪明和挑剔；不要写成无脑柔软或现代恋爱撒娇。"
+      : null,
   ].filter(Boolean).join("\n");
 }
 

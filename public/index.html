@@ -3,150 +3,631 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Laurence Bot Test</title>
+  <title>Laurence</title>
   <style>
-    body {
-      font-family: sans-serif;
-      max-width: 900px;
-      margin: 40px auto;
-      padding: 0 16px;
-      line-height: 1.6;
+    :root {
+      --bg: #f3f0ea;
+      --panel: #fcfaf6;
+      --panel-border: #d8d1c5;
+      --text: #2f2a24;
+      --muted: #7a7063;
+      --accent: #5b4a39;
+      --accent-2: #8d7a64;
+      --user-bubble: #e9dfd0;
+      --bot-bubble: #ffffff;
+      --error: #8b3a3a;
+      --shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+      --radius: 16px;
     }
 
-    textarea {
-      width: 100%;
-      min-height: 120px;
-      margin-bottom: 12px;
-      font-size: 16px;
-      padding: 12px;
+    * {
       box-sizing: border-box;
     }
 
-    button {
-      padding: 10px 16px;
-      font-size: 16px;
-      cursor: pointer;
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Georgia", "Times New Roman", "Noto Serif SC", serif;
     }
 
-    pre {
+    body {
+      display: flex;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 920px;
+      height: calc(100vh - 40px);
+      display: flex;
+      flex-direction: column;
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .header {
+      padding: 16px 18px 14px;
+      border-bottom: 1px solid var(--panel-border);
+      background: rgba(255,255,255,0.5);
+      backdrop-filter: blur(6px);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+    }
+
+    .header-left {
+      min-width: 0;
+    }
+
+    .title {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+
+    .subline {
+      margin-top: 6px;
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      flex-shrink: 0;
+    }
+
+    .ghost-btn {
+      border: 1px solid var(--panel-border);
+      background: #fff;
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 12px;
+      font: inherit;
+      font-size: 13px;
+      cursor: pointer;
+      transition: 0.18s ease;
+    }
+
+    .ghost-btn:hover {
+      border-color: var(--accent-2);
+      transform: translateY(-1px);
+    }
+
+    .chat {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      background:
+        linear-gradient(to bottom, rgba(255,255,255,0.2), rgba(255,255,255,0)),
+        var(--bg);
+    }
+
+    .empty {
+      margin: auto;
+      text-align: center;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.8;
+      max-width: 520px;
+    }
+
+    .message-row {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-width: 78%;
+    }
+
+    .message-row.user {
+      align-self: flex-end;
+      align-items: flex-end;
+    }
+
+    .message-row.assistant {
+      align-self: flex-start;
+      align-items: flex-start;
+    }
+
+    .message-meta {
+      font-size: 12px;
+      color: var(--muted);
+      padding: 0 4px;
+    }
+
+    .bubble {
+      padding: 12px 14px;
+      border-radius: var(--radius);
+      line-height: 1.75;
+      font-size: 16px;
       white-space: pre-wrap;
       word-break: break-word;
-      background: #f6f6f6;
-      padding: 12px;
-      border-radius: 8px;
-      margin-top: 16px;
+      border: 1px solid var(--panel-border);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
     }
 
-    .muted {
-      color: #666;
-      margin-bottom: 16px;
+    .user .bubble {
+      background: var(--user-bubble);
+      border-bottom-right-radius: 6px;
+    }
+
+    .assistant .bubble {
+      background: var(--bot-bubble);
+      border-bottom-left-radius: 6px;
+    }
+
+    .typing {
+      align-self: flex-start;
+      color: var(--muted);
+      font-size: 14px;
+      padding: 0 4px;
+    }
+
+    .composer {
+      border-top: 1px solid var(--panel-border);
+      padding: 14px 16px 16px;
+      background: var(--panel);
+    }
+
+    .input-wrap {
+      display: flex;
+      gap: 12px;
+      align-items: flex-end;
+    }
+
+    textarea {
+      flex: 1;
+      resize: none;
+      min-height: 58px;
+      max-height: 180px;
+      border: 1px solid var(--panel-border);
+      border-radius: 16px;
+      padding: 14px 16px;
+      font: inherit;
+      font-size: 15px;
+      line-height: 1.6;
+      background: #fff;
+      color: var(--text);
+      outline: none;
+    }
+
+    textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(91, 74, 57, 0.08);
+    }
+
+    .send-btn {
+      flex: 0 0 auto;
+      border: none;
+      border-radius: 14px;
+      background: var(--accent);
+      color: #fff;
+      font: inherit;
+      font-size: 15px;
+      padding: 13px 18px;
+      cursor: pointer;
+      transition: 0.18s ease;
+    }
+
+    .send-btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+      opacity: 0.95;
+    }
+
+    .send-btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .composer-hint {
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .error-banner {
+      margin: 0 20px 14px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: #fff2f2;
+      color: var(--error);
+      border: 1px solid #e9c5c5;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 0;
+      }
+
+      .app {
+        max-width: none;
+        height: 100vh;
+        border-radius: 0;
+        border: none;
+      }
+
+      .header {
+        padding: 14px;
+        flex-direction: column;
+      }
+
+      .chat {
+        padding: 16px;
+      }
+
+      .message-row {
+        max-width: 90%;
+      }
+
+      .title {
+        font-size: 20px;
+      }
+
+      .header-actions {
+        width: 100%;
+      }
+
+      .ghost-btn {
+        flex: 1;
+      }
     }
   </style>
 </head>
 <body>
-  <h1>Laurence 聊天测试页</h1>
-  <p class="muted">本地测试用页面。输入一句话，点发送即可。</p>
+  <div class="app">
+    <div class="header">
+      <div class="header-left">
+        <h1 class="title">Laurence</h1>
+        <div class="subline">
+          <span id="sessionLabel">session：未建立</span>
+          <span>状态：测试环境</span>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button id="newSessionBtn" class="ghost-btn">新会话</button>
+        <button id="clearLocalBtn" class="ghost-btn">清空本地记录</button>
+      </div>
+    </div>
 
-  <textarea id="message" placeholder="比如：你今天为什么又没按时吃晚饭？"></textarea>
-  <br />
-  <button id="sendBtn">发送</button>
+    <div id="errorBanner" class="error-banner" style="display:none;"></div>
 
-  <pre id="output">等待输入……</pre>
+    <div id="chat" class="chat"></div>
+
+    <div class="composer">
+      <div class="input-wrap">
+        <textarea
+          id="message"
+          placeholder="比如：你今天为什么又没按时吃晚饭？"
+        ></textarea>
+        <button id="sendBtn" class="send-btn">发送</button>
+      </div>
+      <div class="composer-hint">
+        <span>Enter 换行，Ctrl/⌘ + Enter 发送</span>
+        <span id="historyCount">0 条消息</span>
+      </div>
+    </div>
+  </div>
 
   <script>
     const SESSION_KEY = "laurence-session-id";
+    const HISTORY_KEY_PREFIX = "laurence-history:";
+    const MAX_LOCAL_HISTORY = 100;
+
     const history = [];
-    const output = document.getElementById("output");
+
+    const chatEl = document.getElementById("chat");
     const sendBtn = document.getElementById("sendBtn");
     const messageInput = document.getElementById("message");
+    const sessionLabel = document.getElementById("sessionLabel");
+    const historyCount = document.getElementById("historyCount");
+    const errorBanner = document.getElementById("errorBanner");
+    const newSessionBtn = document.getElementById("newSessionBtn");
+    const clearLocalBtn = document.getElementById("clearLocalBtn");
 
     function createSessionId() {
       if (globalThis.crypto?.randomUUID) {
         return `session_${globalThis.crypto.randomUUID()}`;
       }
-
       return `session_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
     }
 
-    function getOrCreateSessionId() {
-      const current = localStorage.getItem(SESSION_KEY);
-      if (current) {
-        return current;
-      }
-
-      const next = createSessionId();
-      localStorage.setItem(SESSION_KEY, next);
-      return next;
+    function getStoredSessionId() {
+      return localStorage.getItem(SESSION_KEY);
     }
 
-    function persistSessionId(sessionId) {
-      if (typeof sessionId === "string" && sessionId.trim()) {
-        localStorage.setItem(SESSION_KEY, sessionId.trim());
+    function setStoredSessionId(sessionId) {
+      localStorage.setItem(SESSION_KEY, sessionId);
+    }
+
+    function getCurrentSessionId() {
+      let sessionId = getStoredSessionId();
+      if (!sessionId) {
+        sessionId = createSessionId();
+        setStoredSessionId(sessionId);
+      }
+      return sessionId;
+    }
+
+    function getHistoryStorageKey(sessionId) {
+      return `${HISTORY_KEY_PREFIX}${sessionId}`;
+    }
+
+    function persistHistory(sessionId, messages) {
+      try {
+        const trimmed = messages.slice(-MAX_LOCAL_HISTORY);
+        localStorage.setItem(
+          getHistoryStorageKey(sessionId),
+          JSON.stringify(trimmed)
+        );
+      } catch (err) {
+        console.warn("保存本地 history 失败", err);
       }
     }
 
-    function logSessionDebug(message, data) {
-      if (!data?.meta?.sessionState) {
+    function loadHistory(sessionId) {
+      try {
+        const raw = localStorage.getItem(getHistoryStorageKey(sessionId));
+        if (!raw) return [];
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (err) {
+        console.warn("读取本地 history 失败", err);
+        return [];
+      }
+    }
+
+    function clearHistory(sessionId) {
+      localStorage.removeItem(getHistoryStorageKey(sessionId));
+    }
+
+    function formatDisplayTimestamp(ts) {
+      const date = ts ? new Date(ts) : new Date();
+      if (Number.isNaN(date.getTime())) return "";
+      return new Intl.DateTimeFormat("zh-CN", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false
+      }).format(date);
+    }
+
+    function getDisplayRole(role) {
+      if (role === "user") return "Hunter";
+      if (role === "assistant") return "Laurence";
+      return role || "Unknown";
+    }
+
+    function setError(message = "") {
+      if (!message) {
+        errorBanner.style.display = "none";
+        errorBanner.textContent = "";
+        return;
+      }
+      errorBanner.style.display = "block";
+      errorBanner.textContent = message;
+    }
+
+    function updateTopBar() {
+      const sessionId = getCurrentSessionId();
+      sessionLabel.textContent = `session：${sessionId}`;
+      historyCount.textContent = `${history.length} 条消息`;
+    }
+
+    function createMessageNode(item) {
+      const row = document.createElement("div");
+      row.className = `message-row ${item.role === "user" ? "user" : "assistant"}`;
+
+      const meta = document.createElement("div");
+      meta.className = "message-meta";
+      meta.textContent = `${getDisplayRole(item.role)} · ${formatDisplayTimestamp(item.ts)}`;
+
+      const bubble = document.createElement("div");
+      bubble.className = "bubble";
+      bubble.textContent = item.content || "";
+
+      row.appendChild(meta);
+      row.appendChild(bubble);
+      return row;
+    }
+
+    function renderHistory() {
+      chatEl.innerHTML = "";
+
+      if (!history.length) {
+        const empty = document.createElement("div");
+        empty.className = "empty";
+        empty.innerHTML = "这里会显示你和 Laurence 的对话。<br />先说一句话试试。";
+        chatEl.appendChild(empty);
+        updateTopBar();
         return;
       }
 
-      console.group("[session-debug] Laurence response");
-      console.log("sessionId:", data.sessionId);
-      console.log("user message:", message);
-      console.log("reply:", data.reply);
-      console.log("sessionState:", data.meta.sessionState);
-      console.groupEnd();
+      for (const item of history) {
+        chatEl.appendChild(createMessageNode(item));
+      }
+
+      updateTopBar();
+      chatEl.scrollTop = chatEl.scrollHeight;
+    }
+
+    function showTyping() {
+      const typing = document.createElement("div");
+      typing.id = "typingIndicator";
+      typing.className = "typing";
+      typing.textContent = "Laurence 正在斟酌回答……";
+      chatEl.appendChild(typing);
+      chatEl.scrollTop = chatEl.scrollHeight;
+    }
+
+    function hideTyping() {
+      const typing = document.getElementById("typingIndicator");
+      if (typing) typing.remove();
+    }
+
+    function autoResizeTextarea() {
+      messageInput.style.height = "auto";
+      messageInput.style.height = Math.min(messageInput.scrollHeight, 180) + "px";
+    }
+
+    function replaceHistory(messages) {
+      history.length = 0;
+      history.push(...messages);
+      persistHistory(getCurrentSessionId(), history);
+      renderHistory();
+    }
+
+    function bootstrapHistory() {
+      const sessionId = getCurrentSessionId();
+      const saved = loadHistory(sessionId);
+      history.length = 0;
+      history.push(...saved);
+      renderHistory();
     }
 
     async function sendMessage() {
       const message = messageInput.value.trim();
-      if (!message) return;
+      if (!message || sendBtn.disabled) return;
 
+      setError("");
       sendBtn.disabled = true;
-      output.textContent = "请求中……";
+
+      const sessionId = getCurrentSessionId();
+
+      const optimisticUserMessage = {
+        role: "user",
+        content: message,
+        ts: new Date().toISOString()
+      };
+
+      history.push(optimisticUserMessage);
+      persistHistory(sessionId, history);
+      renderHistory();
+      showTyping();
 
       try {
-        const sessionId = getOrCreateSessionId();
+        const requestHistory = history.slice(0, -1).map(({ role, content, ts }) => ({
+          role,
+          content,
+          ts
+        }));
+
         const resp = await fetch("/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             message,
-            history,
+            history: requestHistory,
             sessionId
           })
         });
 
         const data = await resp.json();
-        persistSessionId(data.sessionId);
+
+        if (data.sessionId && typeof data.sessionId === "string") {
+          setStoredSessionId(data.sessionId);
+        }
 
         if (!resp.ok) {
-          output.textContent = "请求失败：\n" + JSON.stringify(data, null, 2);
+          history.pop();
+          persistHistory(getCurrentSessionId(), history);
+          hideTyping();
+          renderHistory();
+          setError("请求失败： " + (data.message || JSON.stringify(data)));
           return;
         }
 
-        history.length = 0;
-        history.push(...data.history);
-        logSessionDebug(message, data);
+        const normalizedHistory = Array.isArray(data.history)
+          ? data.history.map(item => ({
+              role: item.role,
+              content: item.content,
+              ts: item.ts || new Date().toISOString()
+            }))
+          : history;
 
-        output.textContent =
-          `sessionId：${data.sessionId}\n\nLaurence：\n\n${data.reply}\n\n---\n\n完整 history：\n` +
-          JSON.stringify(data.history, null, 2);
+        hideTyping();
+        replaceHistory(normalizedHistory);
 
         messageInput.value = "";
+        autoResizeTextarea();
       } catch (err) {
-        output.textContent = "网络错误：\n" + String(err);
+        history.pop();
+        persistHistory(getCurrentSessionId(), history);
+        hideTyping();
+        renderHistory();
+        setError("网络错误： " + String(err));
       } finally {
         sendBtn.disabled = false;
+        messageInput.focus();
       }
     }
 
+    function startNewSession() {
+      if (!confirm("开始新会话？当前会话记录会保留在本地，但不会继续使用。")) {
+        return;
+      }
+      const newSessionId = createSessionId();
+      setStoredSessionId(newSessionId);
+      history.length = 0;
+      persistHistory(newSessionId, history);
+      setError("");
+      renderHistory();
+      messageInput.value = "";
+      autoResizeTextarea();
+      messageInput.focus();
+    }
+
+    function clearAllLocalHistory() {
+      if (!confirm("清空当前会话在本地保存的聊天记录？")) {
+        return;
+      }
+      const sessionId = getCurrentSessionId();
+      clearHistory(sessionId);
+      history.length = 0;
+      setError("");
+      renderHistory();
+      messageInput.value = "";
+      autoResizeTextarea();
+      messageInput.focus();
+    }
+
     sendBtn.addEventListener("click", sendMessage);
+    newSessionBtn.addEventListener("click", startNewSession);
+    clearLocalBtn.addEventListener("click", clearAllLocalHistory);
+
+    messageInput.addEventListener("input", autoResizeTextarea);
+
     messageInput.addEventListener("keydown", (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
         sendMessage();
       }
     });
+
+    bootstrapHistory();
+    autoResizeTextarea();
   </script>
 </body>
 </html>
