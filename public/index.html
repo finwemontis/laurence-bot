@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Laurence</title>
+  <title>Chat with Laurence</title>
   <style>
     :root {
       --bg: #f3f0ea;
@@ -256,6 +256,43 @@
       line-height: 1.6;
     }
 
+    .debug-panel {
+      margin: 0 20px 14px;
+      padding: 12px;
+      border-radius: 12px;
+      background: #f7f4ee;
+      border: 1px solid var(--panel-border);
+    }
+
+    .debug-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .debug-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .debug-output {
+      margin: 0;
+      max-height: 220px;
+      overflow: auto;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: #fff;
+      border: 1px solid var(--panel-border);
+      color: var(--text);
+      font: 12px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
     @media (max-width: 640px) {
       body {
         padding: 0;
@@ -292,6 +329,21 @@
       .ghost-btn {
         flex: 1;
       }
+
+      .input-wrap {
+        align-items: stretch;
+        gap: 8px;
+      }
+
+      textarea {
+        min-width: 0;
+      }
+
+      .send-btn {
+        flex: 0 0 76px;
+        width: 76px;
+        padding: 0;
+      }
     }
   </style>
 </head>
@@ -299,7 +351,7 @@
   <div class="app">
     <div class="header">
       <div class="header-left">
-        <h1 class="title">Laurence</h1>
+        <h1 class="title">Chat with Laurence</h1>
         <div class="subline">
           <span id="sessionLabel">session：未建立</span>
           <span>状态：测试环境</span>
@@ -312,6 +364,17 @@
     </div>
 
     <div id="errorBanner" class="error-banner" style="display:none;"></div>
+
+    <div id="debugPanel" class="debug-panel" style="display:none;">
+      <div class="debug-head">
+        <span>调试输出</span>
+        <div class="debug-actions">
+          <button id="debugToggleBtn" class="ghost-btn" type="button">收起</button>
+          <button id="debugClearBtn" class="ghost-btn" type="button">清空</button>
+        </div>
+      </div>
+      <pre id="debugOutput" class="debug-output"></pre>
+    </div>
 
     <div id="chat" class="chat"></div>
 
@@ -345,6 +408,11 @@
     const errorBanner = document.getElementById("errorBanner");
     const newSessionBtn = document.getElementById("newSessionBtn");
     const clearLocalBtn = document.getElementById("clearLocalBtn");
+
+    const debugPanel = document.getElementById("debugPanel");
+    const debugOutput = document.getElementById("debugOutput");
+    const debugToggleBtn = document.getElementById("debugToggleBtn");
+    const debugClearBtn = document.getElementById("debugClearBtn");
 
     function createSessionId() {
       if (globalThis.crypto?.randomUUID) {
@@ -406,6 +474,7 @@
       const date = ts ? new Date(ts) : new Date();
       if (Number.isNaN(date.getTime())) return "";
       return new Intl.DateTimeFormat("zh-CN", {
+        timeZone: "Asia/Shanghai",
         year: "numeric",
         month: "2-digit",
         day: "2-digit",
@@ -551,6 +620,20 @@
           setStoredSessionId(data.sessionId);
         }
 
+        if (data.meta) {
+          const isDebugReply = typeof message === "string" && message.trim().startsWith("/tune");
+          if (isDebugReply) {
+            hideTyping();
+            history.pop(); // 不把 /debug 命令留在聊天里；如果你想保留用户命令，这行就删掉
+            persistHistory(getCurrentSessionId(), history);
+            renderHistory();
+            showDebug(data.meta);
+            messageInput.value = "";
+            autoResizeTextarea();
+            return;
+          }
+        }
+
         if (!resp.ok) {
           history.pop();
           persistHistory(getCurrentSessionId(), history);
@@ -612,6 +695,34 @@
       messageInput.value = "";
       autoResizeTextarea();
       messageInput.focus();
+    }
+
+    // 调试命令函数
+    function showDebug(content) {
+      debugPanel.style.display = "block";
+      debugOutput.textContent =
+        typeof content === "string" ? content : JSON.stringify(content, null, 2);
+    }
+
+    function clearDebug() {
+      debugOutput.textContent = "";
+      debugPanel.style.display = "none";
+    }
+
+    function toggleDebug() {
+      if (!debugOutput || !debugToggleBtn) {
+        return;
+      }
+
+      const isHidden = debugOutput.style.display === "none";
+      debugOutput.style.display = isHidden ? "block" : "none";
+      debugToggleBtn.textContent = isHidden ? "收起" : "展开";
+    }
+
+    // 调试命令函数
+    if (debugToggleBtn && debugClearBtn) {
+      debugToggleBtn.addEventListener("click", toggleDebug);
+      debugClearBtn.addEventListener("click", clearDebug);
     }
 
     sendBtn.addEventListener("click", sendMessage);
