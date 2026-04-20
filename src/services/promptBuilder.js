@@ -1,4 +1,4 @@
-import { buildSessionStatePrompt } from "../logic/sessionGuard.js";
+import { buildSessionStatePrompt } from "../logic/prompt/sessionPromptBuilder.js";
 import { RELATIONSHIP_PATTERNS } from "../config/sessionKeywords.js";
 
 function sanitizeHistory(history = []) {

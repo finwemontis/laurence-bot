@@ -10,4 +10,4 @@ export {
   resetSessionState,
   isSessionLocked,
   snapshotSessionState
-} from "../logic/stateLogic.js";
+} from "../logic/state/stateLogic.js";

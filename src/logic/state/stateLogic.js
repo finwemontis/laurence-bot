@@ -3,11 +3,12 @@ import { fileURLToPath } from "url";
 import fs from "fs/promises";
 import { randomUUID } from "crypto";
 import { applySessionDecay, finalizeSessionState, getLockedReply } from "./sessionGuard.js";
-import { formatUtc8Timestamp, getUtc8Parts } from "../utils/time.js";
+import { buildDefaultRationalDefense } from "../guards/rationalGuard.js";
+import { formatUtc8Timestamp, getUtc8Parts } from "../../utils/time.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const sessionsDir = path.resolve(__dirname, "../../data/sessions");
+const sessionsDir = path.resolve(__dirname, "../../../data/sessions");
 const SESSION_STATE_FILENAME = "session-state.json";
 const DEBUG_STATE_FILENAME = "debug-state.json";
 const TEMP_SUFFIX = ".tmp";
@@ -44,6 +45,31 @@ function clampConditionGroup(group = {}) {
     irritability: clamp(group.irritability, 0, CONDITION_MAX),
     hunger: clamp(group.hunger, 0, CONDITION_MAX),
     health: clamp(group.health, 0, CONDITION_MAX)
+  };
+}
+
+function normalizeRationalDefenseGroup(group = {}) {
+  const defaults = buildDefaultRationalDefense();
+  const dominantMode = typeof group.dominantMode === "string" && group.dominantMode.trim()
+    ? group.dominantMode.trim()
+    : defaults.dominantMode;
+  const lastTrigger = typeof group.lastTrigger === "string" && group.lastTrigger.trim()
+    ? group.lastTrigger.trim()
+    : null;
+  const lastShiftAt = typeof group.lastShiftAt === "string" && group.lastShiftAt.trim()
+    ? group.lastShiftAt.trim()
+    : null;
+
+  return {
+    ...defaults,
+    ...group,
+    level: clamp(group.level, 0, CONDITION_MAX),
+    dominantMode,
+    suppressionStrength: clamp(group.suppressionStrength, 0, CONDITION_MAX),
+    vigilance: clamp(group.vigilance, 0, CONDITION_MAX),
+    contradictionLoad: clamp(group.contradictionLoad, 0, CONDITION_MAX),
+    lastTrigger,
+    lastShiftAt
   };
 }
 
@@ -128,6 +154,7 @@ export function createDefaultSessionState(sessionId = null, now = new Date()) {
       lastSensitiveTopic: null,
       refusalCount: 0
     },
+    rationalDefense: buildDefaultRationalDefense(),
     derived: {
       mood: "calm",
       availability: "limited",
@@ -172,6 +199,10 @@ function normalizeSessionState(value, sessionId = null) {
       ...defaults.privacy,
       ...(state.privacy || {})
     },
+    rationalDefense: normalizeRationalDefenseGroup({
+      ...defaults.rationalDefense,
+      ...(state.rationalDefense || {})
+    }),
     derived: {
       ...defaults.derived,
       ...(state.derived || {})

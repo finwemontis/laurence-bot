@@ -1,4 +1,4 @@
-import { scheduleConfig } from "../config/scheduleConfig.js";
+import { scheduleConfig } from "../../config/scheduleConfig.js";
 
 function timeToMinutes(value) {
   const [hours, minutes] = value.split(":").map(Number);

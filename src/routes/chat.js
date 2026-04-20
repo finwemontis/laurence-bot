@@ -8,8 +8,8 @@ import { getBaseLore } from "../services/loreService.js";
 import { createMessage, ensureMessageTimestamps } from "../services/historyService.js";
 // import逻辑处理脚本
 import { handleDebugCommand } from "../logic/commandHandler.js";
-import { applyAssistantReplyToSessionState, applyUserMessageToSessionState, getLockedReply } from "../logic/sessionGuard.js";
-import { ensureSessionId, readActiveSessionState, saveSessionState, snapshotSessionState } from "../logic/stateLogic.js";
+import { applyAssistantReplyToSessionState, applyUserMessageToSessionState, getLockedReply } from "../logic/state/sessionGuard.js";
+import { ensureSessionId, readActiveSessionState, saveSessionState, snapshotSessionState } from "../logic/state/stateLogic.js";
 
 // 创建聊天路由
 const router = express.Router();

@@ -5,7 +5,7 @@ import {
   resetSessionState,
   snapshotSessionState,
   updateSessionState
-} from "./stateLogic.js";
+} from "./state/stateLogic.js";
 import { formatUtc8Timestamp } from "../utils/time.js";
 
 function parseLockDuration(input) {
