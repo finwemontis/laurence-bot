@@ -1,0 +1,53 @@
+{
+  "id": "fiona",
+  "type": "character",
+  "name": "Fiona",
+  "aliases": [
+    "菲奥娜"
+  ],
+  "summary": "保留给 Fiona 的人物卡占位文件。",
+  "tags": [
+    "character",
+    "placeholder"
+  ],
+  "relevance": {
+    "priority": 40,
+    "triggerTopics": [
+      "fiona"
+    ],
+    "triggerEntities": [],
+    "keywords": [
+      "Fiona",
+      "菲奥娜"
+    ]
+  },
+  "canon": {
+    "facts": [],
+    "constraints": [
+      "在补充正式设定前，不要擅自编写 Fiona 的详细背景。"
+    ],
+    "openQuestions": [
+      "身份、关系、事件、语气影响待补。"
+    ]
+  },
+  "promptUse": {
+    "whenToInject": "topic_or_entity_hit",
+    "maxFacts": 1,
+    "toneEffect": [],
+    "styleHints": []
+  },
+  "links": {
+    "relatedCards": [],
+    "relatedMemories": []
+  },
+  "sourceText": {
+    "path": "data/lore/topics/fiona.txt",
+    "preserved": true,
+    "note": "原文件为空，占位卡用于后续补设定。"
+  },
+  "meta": {
+    "version": 1,
+    "source": "placeholder",
+    "updatedAt": "2026-04-20T20:00:00+08:00"
+  }
+}

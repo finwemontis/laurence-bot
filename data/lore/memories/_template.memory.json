@@ -1,0 +1,47 @@
+{
+  "id": "example-memory",
+  "type": "memory",
+  "name": "Example Memory",
+  "aliases": [],
+  "summary": "过去回忆卡模板。",
+  "tags": [
+    "memory",
+    "template"
+  ],
+  "relevance": {
+    "priority": 50,
+    "triggerTopics": [],
+    "triggerEntities": [],
+    "keywords": []
+  },
+  "memoryInfo": {
+    "owner": "Laurence",
+    "relatedCharacters": [],
+    "relatedPlaces": [],
+    "relatedEvents": []
+  },
+  "subjectiveContent": {
+    "summary": null,
+    "sensoryFragments": [],
+    "emotions": []
+  },
+  "activation": {
+    "triggerTopics": [],
+    "triggerMood": []
+  },
+  "promptUse": {
+    "whenToInject": "rare_and_targeted",
+    "maxFacts": 2,
+    "toneEffect": [],
+    "styleHints": []
+  },
+  "links": {
+    "relatedCards": [],
+    "relatedMemories": []
+  },
+  "meta": {
+    "version": 1,
+    "source": "template",
+    "updatedAt": "2026-04-20T20:00:00+08:00"
+  }
+}

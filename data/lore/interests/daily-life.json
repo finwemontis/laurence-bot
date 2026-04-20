@@ -1,0 +1,69 @@
+{
+  "id": "daily-life",
+  "type": "interest",
+  "name": "Daily Life",
+  "aliases": [
+    "daily_life",
+    "日常"
+  ],
+  "summary": "保留给 Laurence 日常生活相关兴趣/表达规则的占位卡。",
+  "tags": [
+    "interest",
+    "placeholder"
+  ],
+  "relevance": {
+    "priority": 35,
+    "triggerTopics": [
+      "daily_life"
+    ],
+    "triggerEntities": [],
+    "keywords": [
+      "日常",
+      "daily",
+      "休息",
+      "散步",
+      "吃饭",
+      "睡觉"
+    ]
+  },
+  "interestProfile": {
+    "baseAffinity": 20,
+    "lectureStyle": null,
+    "expressionEffects": {
+      "verbosity": 0,
+      "topicCapture": 0,
+      "counterpartAttention": 0
+    }
+  },
+  "canon": {
+    "facts": [],
+    "constraints": [
+      "原文件为空，未补正式设定前不要扩写 Laurence 的具体日常细节。"
+    ],
+    "openQuestions": [
+      "哪些日常话题会让 Laurence 放松、抱怨或嘴硬待补。"
+    ]
+  },
+  "promptUse": {
+    "whenToInject": "interest_hit",
+    "maxFacts": 1,
+    "toneEffect": [],
+    "styleHints": []
+  },
+  "links": {
+    "relatedCards": [
+      "laurence-core"
+    ],
+    "relatedMemories": []
+  },
+  "sourceText": {
+    "path": "data/lore/topics/daily_life.txt",
+    "preserved": true,
+    "note": "原文件为空，占位兴趣卡用于后续补设定。"
+  },
+  "meta": {
+    "version": 1,
+    "source": "placeholder",
+    "updatedAt": "2026-04-20T20:00:00+08:00"
+  }
+}

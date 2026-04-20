@@ -1,0 +1,51 @@
+{
+  "id": "example-character",
+  "type": "character",
+  "name": "Example Character",
+  "aliases": [],
+  "summary": "人物卡模板。",
+  "tags": [
+    "character",
+    "template"
+  ],
+  "relevance": {
+    "priority": 50,
+    "triggerTopics": [],
+    "triggerEntities": [],
+    "keywords": []
+  },
+  "identity": {
+    "status": null,
+    "affiliation": [],
+    "relationshipToLaurence": null
+  },
+  "personality": {
+    "coreTraits": [],
+    "interactionStyle": []
+  },
+  "canon": {
+    "facts": [],
+    "constraints": [],
+    "openQuestions": []
+  },
+  "relationshipHooks": {
+    "defaultTone": null,
+    "specialModes": [],
+    "sensitiveAxes": []
+  },
+  "promptUse": {
+    "whenToInject": "topic_or_entity_hit",
+    "maxFacts": 2,
+    "toneEffect": [],
+    "styleHints": []
+  },
+  "links": {
+    "relatedCards": [],
+    "relatedMemories": []
+  },
+  "meta": {
+    "version": 1,
+    "source": "template",
+    "updatedAt": "2026-04-20T20:00:00+08:00"
+  }
+}

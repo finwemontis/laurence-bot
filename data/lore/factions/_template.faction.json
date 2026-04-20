@@ -1,0 +1,45 @@
+{
+  "id": "example-faction",
+  "type": "faction",
+  "name": "Example Faction",
+  "aliases": [],
+  "summary": "组织卡模板。",
+  "tags": [
+    "faction",
+    "template"
+  ],
+  "relevance": {
+    "priority": 50,
+    "triggerTopics": [],
+    "triggerEntities": [],
+    "keywords": []
+  },
+  "nature": {
+    "category": null,
+    "scope": null
+  },
+  "canon": {
+    "facts": [],
+    "constraints": [],
+    "openQuestions": []
+  },
+  "stance": {
+    "laurencePosition": null,
+    "emotionalWeight": []
+  },
+  "promptUse": {
+    "whenToInject": "topic_hit",
+    "maxFacts": 2,
+    "toneEffect": [],
+    "styleHints": []
+  },
+  "links": {
+    "relatedCards": [],
+    "relatedMemories": []
+  },
+  "meta": {
+    "version": 1,
+    "source": "template",
+    "updatedAt": "2026-04-20T20:00:00+08:00"
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "id": "example-interest",
+  "type": "interest",
+  "name": "Example Interest",
+  "aliases": [],
+  "summary": "兴趣卡模板。",
+  "tags": [
+    "interest",
+    "template"
+  ],
+  "relevance": {
+    "priority": 50,
+    "triggerTopics": [],
+    "triggerEntities": [],
+    "keywords": []
+  },
+  "interestProfile": {
+    "baseAffinity": 50,
+    "lectureStyle": null,
+    "expressionEffects": {
+      "verbosity": 0,
+      "topicCapture": 0,
+      "counterpartAttention": 0
+    }
+  },
+  "canon": {
+    "facts": [],
+    "constraints": [],
+    "openQuestions": []
+  },
+  "promptUse": {
+    "whenToInject": "interest_hit",
+    "maxFacts": 2,
+    "toneEffect": [],
+    "styleHints": []
+  },
+  "links": {
+    "relatedCards": [],
+    "relatedMemories": []
+  },
+  "meta": {
+    "version": 1,
+    "source": "template",
+    "updatedAt": "2026-04-20T20:00:00+08:00"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "id": "example-event",
+  "type": "event",
+  "name": "Example Event",
+  "aliases": [],
+  "summary": "事件卡模板。",
+  "tags": [
+    "event",
+    "template"
+  ],
+  "relevance": {
+    "priority": 50,
+    "triggerTopics": [],
+    "triggerEntities": [],
+    "keywords": []
+  },
+  "eventInfo": {
+    "category": null,
+    "participants": [],
+    "places": []
+  },
+  "timeline": {
+    "sequence": null,
+    "era": null
+  },
+  "canon": {
+    "facts": [],
+    "constraints": [],
+    "openQuestions": []
+  },
+  "emotionalWeight": {
+    "forLaurence": []
+  },
+  "promptUse": {
+    "whenToInject": "topic_or_entity_hit",
+    "maxFacts": 2,
+    "toneEffect": [],
+    "styleHints": []
+  },
+  "links": {
+    "relatedCards": [],
+    "relatedMemories": []
+  },
+  "meta": {
+    "version": 1,
+    "source": "template",
+    "updatedAt": "2026-04-20T20:00:00+08:00"
+  }
+}

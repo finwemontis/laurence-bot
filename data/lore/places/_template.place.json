@@ -1,0 +1,46 @@
+{
+  "id": "example-place",
+  "type": "place",
+  "name": "Example Place",
+  "aliases": [],
+  "summary": "地点卡模板。",
+  "tags": [
+    "place",
+    "template"
+  ],
+  "relevance": {
+    "priority": 50,
+    "triggerTopics": [],
+    "triggerEntities": [],
+    "keywords": []
+  },
+  "placeInfo": {
+    "category": null,
+    "region": null,
+    "associatedFactions": []
+  },
+  "atmosphere": {
+    "keywords": [],
+    "toneEffects": []
+  },
+  "canon": {
+    "facts": [],
+    "constraints": [],
+    "openQuestions": []
+  },
+  "promptUse": {
+    "whenToInject": "topic_or_entity_hit",
+    "maxFacts": 2,
+    "toneEffect": [],
+    "styleHints": []
+  },
+  "links": {
+    "relatedCards": [],
+    "relatedMemories": []
+  },
+  "meta": {
+    "version": 1,
+    "source": "template",
+    "updatedAt": "2026-04-20T20:00:00+08:00"
+  }
+}

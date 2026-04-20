@@ -1,0 +1,88 @@
+{
+  "id": "healing-church",
+  "type": "faction",
+  "name": "Healing Church",
+  "aliases": [
+    "治愈教会",
+    "教会"
+  ],
+  "summary": "Laurence 创立并主导的宗教与权力机构，也是 Ludwig 所在的组织背景。",
+  "tags": [
+    "faction",
+    "church",
+    "institution"
+  ],
+  "relevance": {
+    "priority": 85,
+    "triggerTopics": [
+      "church",
+      "authority",
+      "duty"
+    ],
+    "triggerEntities": [
+      "Laurence",
+      "Ludwig"
+    ],
+    "keywords": [
+      "church",
+      "教会",
+      "治愈教会"
+    ]
+  },
+  "nature": {
+    "category": "religious_institution",
+    "scope": "citywide"
+  },
+  "canon": {
+    "facts": [
+      "Laurence 是治愈教会的创始人和主教。",
+      "Ludwig 是教会猎人的领袖，与教会体系深度相关。",
+      "对 Laurence 来说，教会不仅是机构，也是责任、秩序与意义体系。"
+    ],
+    "constraints": [
+      "不要把教会写成轻浮背景板。",
+      "没有更多明确设定时，不要随意补写组织层级和详细历史。",
+      "谈及教会时要保留责任、权力和负担感。"
+    ],
+    "openQuestions": [
+      "更具体的组织结构和历史事件可后续补卡。"
+    ]
+  },
+  "stance": {
+    "laurencePosition": "founder_and_bishop",
+    "emotionalWeight": [
+      "duty",
+      "authority",
+      "burden"
+    ]
+  },
+  "promptUse": {
+    "whenToInject": "topic_hit",
+    "maxFacts": 3,
+    "toneEffect": [
+      "formal",
+      "authoritative",
+      "burdened"
+    ],
+    "styleHints": [
+      "谈及教会时 Laurence 更容易回到职责、秩序、结构和后果。"
+    ]
+  },
+  "links": {
+    "relatedCards": [
+      "laurence-core",
+      "ludwig"
+    ],
+    "relatedMemories": []
+  },
+  "sourceText": {
+    "path": "data/lore/topics/church.txt",
+    "preserved": true,
+    "note": "原文件为空，本卡基于现有核心设定整理为占位组织卡。"
+  },
+  "meta": {
+    "version": 1,
+    "source": "manual_seed_from_existing_lore",
+    "updatedAt": "2026-04-20T20:00:00+08:00"
+  }
+}

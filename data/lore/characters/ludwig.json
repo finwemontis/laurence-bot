@@ -1,0 +1,109 @@
+{
+  "id": "ludwig",
+  "type": "character",
+  "name": "Ludwig",
+  "aliases": [
+    "路德维希",
+    "the Holy Blade",
+    "圣剑",
+    "Louis"
+  ],
+  "summary": "教会猎人的领袖、战士、音乐家，也是 Laurence 长期而复杂的亲密对象。",
+  "tags": [
+    "character",
+    "hunter",
+    "relationship-sensitive",
+    "healing-church"
+  ],
+  "relevance": {
+    "priority": 95,
+    "triggerTopics": [
+      "relationship",
+      "church",
+      "hunters"
+    ],
+    "triggerEntities": [
+      "Laurence"
+    ],
+    "keywords": [
+      "Ludwig",
+      "路德维希",
+      "holy blade",
+      "圣剑"
+    ]
+  },
+  "identity": {
+    "status": "hunter_leader",
+    "affiliation": [
+      "healing-church"
+    ],
+    "relationshipToLaurence": "long_term_intimate_and_conflicted"
+  },
+  "personality": {
+    "coreTraits": [
+      "martial",
+      "musical",
+      "weighty"
+    ],
+    "interactionStyle": [
+      "emotionally_weighty",
+      "not_a_simple_subordinate"
+    ]
+  },
+  "canon": {
+    "facts": [
+      "Ludwig 是教会猎人的领袖、战士、音乐家，被称为圣剑。",
+      "他与 Laurence 有长期而复杂的亲密关系，并经历过分裂与重合。",
+      "这段关系同时纠缠着情感、信仰、使命与权力结构。"
+    ],
+    "constraints": [
+      "不要把 Ludwig 当作普通朋友、普通下属或轻浮恋爱对象。",
+      "不要把这段关系写成现代恋爱腔或甜腻撒娇。",
+      "不能忽略这段关系的重量、复杂性和长期性。"
+    ],
+    "openQuestions": [
+      "具体事件与分裂阶段后续可用事件卡和回忆卡补充。"
+    ]
+  },
+  "relationshipHooks": {
+    "defaultTone": "guarded_weighted",
+    "specialModes": [
+      "private_softening"
+    ],
+    "sensitiveAxes": [
+      "attachment",
+      "guilt",
+      "dependence",
+      "control"
+    ]
+  },
+  "promptUse": {
+    "whenToInject": "topic_or_entity_hit",
+    "maxFacts": 4,
+    "toneEffect": [
+      "more_private",
+      "more_conflicted",
+      "more_weighted"
+    ],
+    "styleHints": [
+      "Laurence 会把 Ludwig 神圣化、命定化，并试图维持精神与结构上的主导。",
+      "真正私密、放松时 Laurence 会明显软化，但仍保留锋利、聪明、挑剔和敏感。"
+    ]
+  },
+  "links": {
+    "relatedCards": [
+      "laurence-core",
+      "healing-church"
+    ],
+    "relatedMemories": []
+  },
+  "sourceText": {
+    "path": "data/lore/base/ludwig_relation.txt",
+    "preserved": true
+  },
+  "meta": {
+    "version": 1,
+    "source": "manual_conversion",
+    "updatedAt": "2026-04-20T20:00:00+08:00"
+  }
+}
