@@ -1,4 +1,4 @@
-import { buildDefaultRationalDefense } from "../guards/rationalGuard.js";
+import { buildDefaultRationalDefense } from "../guards/rationalStateEvaluator.js";
 import {
   applyCounterpartPromptOverrides,
   buildCounterpartPromptLines

@@ -1,5 +1,5 @@
 // import作息时间表
-import { applyScheduleToSessionState } from "../schedule/scheduleGuard.js";
+import { applyScheduleToSessionState } from "../schedule/scheduleResolver.js";
 // import时间工具
 import { formatUtc8Timestamp } from "../../utils/time.js";
 // import关键词模式配置
@@ -10,9 +10,9 @@ import {
   VULNERABLE_PATTERNS
 } from "../../config/sessionKeywords.js";
 import { buildDerived, syncIrritabilityFromRelationship } from "./derivedState.js";
-import { applyPrivacyAndRelationshipState } from "../guards/privacyGuard.js";
-import { applyRelationshipStateAdjustments } from "../guards/relationshipGuard.js";
-import { evaluateRationalDefense } from "../guards/rationalGuard.js";
+import { applyPrivacyAndRelationshipState } from "../guards/privacyRules.js";
+import { applyRelationshipStateAdjustments } from "../guards/relationshipRules.js";
+import { evaluateRationalDefense } from "../guards/rationalStateEvaluator.js";
 import {
   applyRestDisturbance,
   isLateNight,

@@ -37,7 +37,7 @@ export function detectRelationshipTopic(message, previousTopic = null) {
     : previousTopic;
 }
 
-// 统一判定会话topic 让sessionGuard只负责编排
+// 统一判定会话topic 让sessionStateEngine只负责编排
 export function detectConversationTopic(message, previousTopic = null) {
   const text = typeof message === "string" ? message.trim() : "";
   const relationshipTopic = detectRelationshipTopic(text, previousTopic);
@@ -56,7 +56,7 @@ export function detectConversationTopic(message, previousTopic = null) {
   return previousTopic;
 }
 
-// 统一评估当前消息的敏感话题压力 供sessionGuard编排使用
+// 统一评估当前消息的敏感话题压力 供sessionStateEngine编排使用
 export function evaluateTopicSignals(text, previousTopic, sensitiveTopicCount = 0) {
   const privacyLevel = getPrivacyLevel(text);
   const relationshipProbe = RELATIONSHIP_PATTERNS.some((pattern) => pattern.test(text));

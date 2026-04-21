@@ -2,8 +2,8 @@ import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs/promises";
 import { randomUUID } from "crypto";
-import { applySessionDecay, finalizeSessionState, getLockedReply } from "./sessionGuard.js";
-import { buildDefaultRationalDefense } from "../guards/rationalGuard.js";
+import { applySessionDecay, finalizeSessionState, getLockedReply } from "./sessionStateEngine.js";
+import { buildDefaultRationalDefense } from "../guards/rationalStateEvaluator.js";
 import { formatUtc8Timestamp, getUtc8Parts } from "../../utils/time.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -255,7 +255,7 @@ export function createDefaultSessionState(sessionId = null, now = new Date()) {
       dependency: 0,
       protectiveness: 0,
       resentment: 0,
-      currentCounterpart: "Ludwig"
+      currentCounterpart: "Hunter"
     },
     condition: {
       fatigue: 20,

@@ -12,7 +12,7 @@ function clampCounter(value) {
   return clamp(value, 0, 100);
 }
 
-// 将关系和隐私压力统一写回state 避免这部分规则继续堆在sessionGuard里
+// 将关系和隐私压力统一写回state 避免这部分规则继续堆在sessionStateEngine里
 export function applyPrivacyAndRelationshipState(state, context) {
   const {
     previousTopic,

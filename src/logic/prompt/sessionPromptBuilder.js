@@ -1,5 +1,5 @@
 import { buildRationalPromptContext, buildRationalPromptLines } from "./rationalPromptBuilder.js";
-import { finalizeSessionState } from "../state/sessionGuard.js";
+import { finalizeSessionState } from "../state/sessionStateEngine.js";
 
 // 将state翻译成prompt 控制本回合语气 态度 边界
 export function buildSessionStatePrompt(state) {
