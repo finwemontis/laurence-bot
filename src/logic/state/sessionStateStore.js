@@ -195,7 +195,6 @@ function normalizeDerivedGroup(group = {}) {
   return {
     mood: normalizeNullableString(group.mood) || "calm",
     availability: normalizeNullableString(group.availability) || "limited",
-    toneBias: normalizeNullableString(group.toneBias) || "neutral",
     expressionProfile: normalizeNullableString(group.expressionProfile)
   };
 }
@@ -340,7 +339,6 @@ export function createDefaultSessionState(sessionId = null, now = new Date()) {
     derived: {
       mood: "calm",
       availability: "limited",
-      toneBias: "neutral",
       expressionProfile: null
     }
   };

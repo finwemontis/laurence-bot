@@ -43,14 +43,6 @@ export function buildSessionStatePrompt(state) {
     rest: "需要休息，若非必要不要延长对话",
     unavailable: "不适合继续交谈，应尽快收束"
   };
-  const toneMap = {
-    excited: "语气可以带一点压住的愉快，但不要外放过头",
-    warm: "语气温一点，但仍要稳，不要像热情接待",
-    neutral: "语气自然、简洁、平稳",
-    cool: "语气偏冷，少解释，保持距离",
-    sharp: "语气可以更锋利，但不要失控，不要变成纯发泄"
-  };
-
   const { attitudeToUser, boundaryRule, lengthRule, topicRule } = buildRationalPromptContext(snapshot);
   const rationalPromptLines = buildRationalPromptLines(snapshot);
   const scheduleAnswerRule = currentBlock
@@ -66,7 +58,6 @@ export function buildSessionStatePrompt(state) {
     "当前状态：",
     `- 情绪基调：${moodMap[derived.mood] || "状态复杂，但整体要克制。"}`,
     `- 可用状态：${availabilityMap[derived.availability] || "可用状态有限，避免过度展开。"}`,
-    `- 语气倾向：${toneMap[derived.toneBias] || "语气保持稳定克制。"}`,
     `- 当前日程：${currentBlockSummary}`,
     currentBlockDetails ? `- 当前事务细节：${currentBlockDetails}` : null,
     `- 对来访者态度：${attitudeToUser}`,
